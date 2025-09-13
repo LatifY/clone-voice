@@ -37,7 +37,7 @@ export const Footer: React.FC = () => {
                 <img src={logo} alt="Logo" className="w-6 h-6" />
               </div>
               <span className="text-2xl font-bold text-white">
-                CLONE VOICE
+                Clone Voice
               </span>
               <span className="text-sm bg-white/10 backdrop-blur-sm border border-white/20 text-white px-2 py-1 rounded-full font-medium">
                 AI

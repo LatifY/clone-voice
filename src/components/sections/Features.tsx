@@ -133,19 +133,19 @@ export const Features: React.FC = () => {
         <div className="mt-20 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 md:p-12 text-white">
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div className="space-y-2 group">
-              <div className="text-3xl md:text-4xl font-bold transition-transform duration-300 group-hover:scale-110">50K+</div>
+              <div className="text-3xl md:text-4xl font-bold transition-transform duration-300 group-hover:scale-110 font-mono">50K+</div>
               <div className="text-gray-300">Active Users</div>
             </div>
             <div className="space-y-2 group">
-              <div className="text-3xl md:text-4xl font-bold transition-transform duration-300 group-hover:scale-110">1M+</div>
+              <div className="text-3xl md:text-4xl font-bold transition-transform duration-300 group-hover:scale-110 font-mono">1M+</div>
               <div className="text-gray-300">Voice Clones Created</div>
             </div>
             <div className="space-y-2 group">
-              <div className="text-3xl md:text-4xl font-bold transition-transform duration-300 group-hover:scale-110">99.8%</div>
+              <div className="text-3xl md:text-4xl font-bold transition-transform duration-300 group-hover:scale-110 font-mono">99.8%</div>
               <div className="text-gray-300">Uptime Guarantee</div>
             </div>
             <div className="space-y-2 group">
-              <div className="text-3xl md:text-4xl font-bold transition-transform duration-300 group-hover:scale-110">24/7</div>
+              <div className="text-3xl md:text-4xl font-bold transition-transform duration-300 group-hover:scale-110 font-mono">24/7</div>
               <div className="text-gray-300">Support Available</div>
             </div>
           </div>

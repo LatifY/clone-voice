@@ -1,18 +1,9 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "../ui";
 import logo from "../../assets/img/logo.png";
 
 // SVG Icons
-const AIIcon = () => (
-  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-    <path
-      fillRule="evenodd"
-      d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
-
 const MenuIcon = () => (
   <svg
     className="w-6 h-6"
@@ -81,12 +72,12 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2">
             <div className="w-6 h-6 rounded-lg flex items-center justify-center">
               <img src={logo} alt="Logo" className="w-6 h-6" />
             </div>
-            <span className="text-xl font-bold text-white">CLONE VOICE</span>
-          </div>
+            <span className="text-xl font-bold text-white">Clone Voice</span>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
@@ -104,20 +95,24 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-gray-300 hover:text-white hover:bg-gray-800"
-            >
-              Sign In
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              className="bg-white text-black hover:bg-gray-100 rounded-full"
-            >
-              Sign up
-            </Button>
+            <Link to="/signin">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-300 hover:text-white hover:bg-gray-800"
+              >
+                Sign In
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button
+                variant="primary"
+                size="sm"
+                className="bg-white text-black hover:bg-gray-100 rounded-full"
+              >
+                Sign up
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -145,20 +140,24 @@ export const Navbar: React.FC = () => {
               </a>
             ))}
             <div className="px-4 pt-4 space-y-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-gray-300 hover:text-white hover:bg-gray-800"
-              >
-                Sign In
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                className="w-full bg-white text-black hover:bg-gray-100 rounded-full"
-              >
-                Sign up
-              </Button>
+              <Link to="/signin" className="block">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-gray-300 hover:text-white hover:bg-gray-800"
+                >
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/signup" className="block">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="w-full bg-white text-black hover:bg-gray-100 rounded-full"
+                >
+                  Sign up
+                </Button>
+              </Link>
             </div>
           </div>
         )}

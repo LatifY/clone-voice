@@ -302,8 +302,8 @@ export const Hero: React.FC = () => {
           {/* Voice Recorder Section */}
           <div className="max-w-md mx-auto mt-16">
             <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8">
-              <h3 className="text-xl font-bold text-white mb-6 text-center font-handwritten text-2xl">
-                "Try Voice Cloning"
+              <h3 className="text-xl font-bold text-white mb-6 text-center text-2xl font-mono">
+                Try Voice Cloning
               </h3>
 
               <div className="space-y-6">

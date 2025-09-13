@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Manrope:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @import "tailwindcss";
 
@@ -27,11 +27,6 @@ body {
 .font-display {
   font-family: 'Clash Display', sans-serif;
   letter-spacing: -0.02em;
-}
-
-.font-handwritten {
-  font-family: 'Old Standard TT', serif;
-  font-style: italic;
 }
 
 .font-heading {
@@ -94,6 +89,10 @@ body {
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+button {
+  cursor: pointer;
 }
 
 /* Custom slider styles */

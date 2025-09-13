@@ -113,10 +113,7 @@ export const Contact: React.FC = () => {
         <div className="text-center space-y-4 mb-16">
           <div className="flex items-center justify-center gap-3 mb-4">
             <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Get in
-              <span className="block mt-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                Touch
-              </span>
+              Get In Touch
             </h2>
           </div>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
@@ -235,33 +232,35 @@ export const Contact: React.FC = () => {
           {/* FAQ */}
           <div className="space-y-8">
             <div>
-              <h3 className="text-2xl font-bold text-white mb-6 font-heading">Frequently Asked Questions</h3>
+              <h3 className="text-2xl font-bold text-white mb-6">Frequently Asked Questions</h3>
               <div className="space-y-4">
                 {faqs.map((faq, index) => (
                   <Card key={index} variant="glass">
                     <CardBody className="p-0">
                       <button
                         onClick={() => toggleFAQ(index)}
-                        className="w-full p-6 text-left flex items-center justify-between hover:bg-white/5 transition-colors rounded-xl"
+                        className="w-full text-left p-2 flex items-center justify-between hover:bg-white/5 transition-colors rounded-xl"
                       >
                         <h4 className="text-lg font-semibold text-white font-body">
                           {faq.question}
                         </h4>
-                        <div className={`transform transition-transform duration-200 text-gray-400 ${
+                        <div className={`transform transition-transform duration-300 text-gray-400 ${
                           openFAQ === index ? 'rotate-180' : ''
                         }`}>
                           <ChevronDownIcon />
                         </div>
                       </button>
-                      {openFAQ === index && (
-                        <div className="px-6 pb-6">
-                          <div className="pt-4 border-t border-white/10">
+                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        openFAQ === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                      }`}>
+                        <div className="px-2">
+                          <div className="pt-2 border-t border-white/10">
                             <p className="text-gray-300 font-body leading-relaxed">
                               {faq.answer}
                             </p>
                           </div>
                         </div>
-                      )}
+                      </div>
                     </CardBody>
                   </Card>
                 ))}
