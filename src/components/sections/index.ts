@@ -1,0 +1,7 @@
+export { Navbar } from './Navbar'
+export { Hero } from './Hero'
+export { Features } from './Features'
+export { Examples } from './Examples'
+export { Pricing } from './Pricing'
+export { Contact } from './Contact'
+export { Footer } from './Footer'
