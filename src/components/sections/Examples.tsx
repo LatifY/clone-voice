@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardBody, Button, Badge } from "../ui";
-import morganFreeman from "../../assets/audio/morgan-freeman.wav";
+import morganFreemanOriginal from "../../assets/audio/original-morgan-freeman.mp3";
+import morganFreemanAI from "../../assets/audio/ai-morgan-freeman.wav";
+import rickOriginal from "../../assets/audio/original-rick.mp3";
+import rickAI from "../../assets/audio/ai-rick.wav";
+
+import morganFreemanImage from "../../assets/img/morgan-freeman.jpg"
+import rickImage from "../../assets/img/rick-sanchez.png"
 
 // SVG Icons
 const PlayIcon = () => (
@@ -43,16 +49,38 @@ const VoiceIcon = () => (
   </svg>
 );
 
+const TextIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path
+      fillRule="evenodd"
+      d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
+const ArrowIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path
+      fillRule="evenodd"
+      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
 interface AudioPlayerProps {
   audioSrc: string;
   isPlaying: boolean;
   onTogglePlay: () => void;
+  isSpecial?: boolean;
 }
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
   audioSrc,
   isPlaying,
   onTogglePlay,
+  isSpecial
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -111,7 +139,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3">
+    <div className={"flex items-center gap-3 bg-white/5 backdrop-blur-sm border rounded-xl p-3 " + (isSpecial ? "border-orange-300" : "border-white/10")}>
       <audio
         ref={audioRef}
         src={audioSrc}
@@ -139,80 +167,54 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 };
 
 export const Examples: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<
-    "text-to-speech" | "speech-to-speech"
-  >("text-to-speech");
+  const [activeTab, setActiveTab] = useState<"text-to-speech" | "speech-to-speech">("text-to-speech");
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [playingType, setPlayingType] = useState<'source' | 'cloned' | null>(null);
 
-  console.log('Morgan Freeman audio import:', morganFreeman);
-
+  // Text-to-Speech Examples (Voice Cloning with Text Input)
   const textToSpeechExamples = [
     {
-      id: "morgan-freeman",
+      id: "morgan-freeman-tts",
       name: "Morgan Freeman",
-      description: "Legendary narrator voice",
-      avatar:
-        "https://mir-s3-cdn-cf.behance.net/project_modules/hd/dd28fa119632693.60a22c4163656.jpg",
-      prompt:
-        "Welcome to the future of sound. With this voice clone app, every word becomes more than text — it becomes an experience",
-      originalVoice: "Morgan Freeman documentary narration",
-      audioSrc: morganFreeman,
+      description: "Actor, narrator",
+      avatar: morganFreemanImage,
+      sourceAudio: morganFreemanOriginal,
+      textPrompt: "Welcome to the future of sound. With this voice clone app, every word becomes more than text, it becomes an experience.",
+      clonedAudio: morganFreemanAI,
+      settings: {
+        emotion: "Confident",
+        speed: "Normal", 
+        pitch: "Deep"
+      }
     },
     {
-      id: "david-attenborough",
-      name: "David Attenborough",
-      description: "Nature documentary legend",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      prompt:
-        "In the heart of the Amazon rainforest, a remarkable species has evolved an extraordinary adaptation to survive.",
-      originalVoice: "BBC nature documentary narration",
-      audioSrc: "/examples/david-attenborough.mp3",
+      id: "rick-tts",
+      name: "Rick Sanchez",
+      description: "Fictional character",
+      avatar: rickImage,
+      sourceAudio: rickOriginal,
+      textPrompt: "I just found a hidden treasure in the backyard! Check it out!",
+      clonedAudio: rickAI, 
+      settings: {
+        emotion: "Inspirational",
+        speed: "Moderate",
+        pitch: "Clear"
+      }
     },
     {
-      id: "barack-obama",
-      name: "Barack Obama",
-      description: "Presidential speaking style",
-      avatar:
-        "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
-      prompt:
-        "Yes we can build a better future for our children, a future filled with hope, opportunity, and unlimited potential.",
-      originalVoice: "Presidential speech delivery",
-      audioSrc: "/examples/barack-obama.mp3",
-    },
-    {
-      id: "oprah-winfrey",
-      name: "Oprah Winfrey",
-      description: "Inspirational talk show host",
-      avatar:
-        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
-      prompt:
-        "You get to choose your own path in life, and when you choose love over fear, magic happens!",
-      originalVoice: "Talk show hosting style",
-      audioSrc: "/examples/oprah-winfrey.mp3",
-    },
-    {
-      id: "steve-jobs",
-      name: "Steve Jobs",
-      description: "Tech visionary presentation",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      prompt:
-        "Today, we're going to revolutionize the way people interact with technology. One more thing... this changes everything.",
-      originalVoice: "Apple keynote presentation style",
-      audioSrc: "/examples/steve-jobs.mp3",
-    },
-    {
-      id: "emma-watson",
-      name: "Emma Watson",
-      description: "British actress eloquence",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      prompt:
-        "Education is the most powerful weapon we can use to change the world and empower future generations.",
-      originalVoice: "UN speech delivery style",
-      audioSrc: "/examples/emma-watson.mp3",
-    },
+      id: "professional-voice-tts",
+      name: "Professional Speaker",
+      description: "Business presentation style",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      sourceAudio: "/examples/business-voice.mp3",
+      textPrompt: "Our quarterly results demonstrate exceptional growth across all key performance indicators and market segments.",
+      clonedAudio: "/examples/business-cloned.mp3",
+      settings: {
+        emotion: "Professional",
+        speed: "Business Pace",
+        pitch: "Authoritative"
+      }
+    }
   ];
 
   const speechToSpeechExamples = [
@@ -285,15 +287,17 @@ export const Examples: React.FC = () => {
     },
   ];
 
-  const handlePlayToggle = (id: string) => {
-    console.log('Play toggle:', { id, currentlyPlaying: playingId });
+  const handlePlayToggle = (id: string, type: 'source' | 'cloned') => {
+    console.log('Play toggle:', { id, type, currentlyPlaying: playingId, currentType: playingType });
     
-    if (playingId === id) {
-      // If currently playing this audio, pause it
+    if (playingId === id && playingType === type) {
+      // If currently playing this exact audio, pause it
       setPlayingId(null);
+      setPlayingType(null);
     } else {
-      // If playing different audio or none, play this one
+      // Play this audio
       setPlayingId(id);
+      setPlayingType(type);
     }
   };
 
@@ -328,8 +332,7 @@ export const Examples: React.FC = () => {
             </h2>
           </div>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Hear the magic of AI voice cloning in action. From celebrity voices
-            to style transformations.
+            Experience the power of AI voice cloning. Transform text to speech or convert speech styles with advanced AI technology.
           </p>
         </div>
 
@@ -345,7 +348,7 @@ export const Examples: React.FC = () => {
               }`}
             >
               <div className="flex items-center gap-2">
-                <AIIcon />
+                <TextIcon />
                 Text to Speech
               </div>
             </button>
@@ -367,11 +370,11 @@ export const Examples: React.FC = () => {
 
         {/* Content */}
         {activeTab === "text-to-speech" && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {textToSpeechExamples.map((example) => (
               <Card key={example.id} hover className="overflow-hidden">
-                <CardBody className="p-6 space-y-4">
-                  {/* Avatar & Info */}
+                <CardBody className="p-6 space-y-6">
+                  {/* Header */}
                   <div className="flex items-center gap-4">
                     <img
                       src={example.avatar}
@@ -388,29 +391,65 @@ export const Examples: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Prompt */}
-                  <div className="space-y-2">
+                  {/* Source Audio */}
+                  <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Badge variant="glass" size="sm">
-                        Text Prompt
+                        <VoiceIcon />
+                        Source Sample
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-300 italic">
-                      "{example.prompt}"
-                    </p>
+                    <AudioPlayer
+                      audioSrc={example.sourceAudio}
+                      isPlaying={playingId === example.id && playingType === 'source'}
+                      onTogglePlay={() => handlePlayToggle(example.id, 'source')}
+                    />
                   </div>
 
-                  {/* Original Voice Info */}
-                  <div className="text-xs text-gray-400">
-                    <strong>Source:</strong> {example.originalVoice}
+                  {/* Text Prompt */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="primary" size="sm">
+                        <TextIcon />
+                        Text Input
+                      </Badge>
+                    </div>
+                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+                      <p className="text-sm text-gray-300 italic">
+                        "{example.textPrompt}"
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Audio Player */}
-                  <AudioPlayer
-                    audioSrc={example.audioSrc}
-                    isPlaying={playingId === example.id}
-                    onTogglePlay={() => handlePlayToggle(example.id)}
-                  />
+                  {/* AI Result */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" size="sm">
+                        🤖 AI Result
+                      </Badge>
+                    </div>
+                    <AudioPlayer
+                      audioSrc={example.clonedAudio}
+                      isPlaying={playingId === example.id && playingType === 'cloned'}
+                      onTogglePlay={() => handlePlayToggle(example.id, 'cloned')}
+                      isSpecial={true}
+                    />
+                  </div>
+
+                  {/* Settings */}
+                  <div className="pt-4 border-t border-white/10">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
+                        {example.settings.emotion}
+                      </span>
+                      <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
+                        {example.settings.speed}
+                      </span>
+                      <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
+                        {example.settings.pitch}
+                      </span>
+                    </div>
+                  </div>
                 </CardBody>
               </Card>
             ))}
@@ -485,8 +524,8 @@ export const Examples: React.FC = () => {
                   {/* Audio Player */}
                   <AudioPlayer
                     audioSrc={example.audioSrc}
-                    isPlaying={playingId === example.id}
-                    onTogglePlay={() => handlePlayToggle(example.id)}
+                    isPlaying={playingId === example.id && playingType === 'cloned'}
+                    onTogglePlay={() => handlePlayToggle(example.id, 'cloned')}
                   />
                 </CardBody>
               </Card>
