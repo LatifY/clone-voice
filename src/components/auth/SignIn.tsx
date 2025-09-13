@@ -1,6 +1,13 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Card, CardBody, Button } from '../ui'
+import { useAuth } from '../../contexts'
+import { 
+  getAuthErrorMessage, 
+  validateEmail, 
+  validatePassword,
+  createLoadingState,
+} from '../../lib/auth'
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -30,7 +37,7 @@ const EyeOffIcon = () => (
   </svg>
 )
 
-interface SignInFormData {
+interface FormData {
   email: string
   password: string
 }
@@ -42,20 +49,23 @@ interface FormErrors {
 }
 
 export const SignIn: React.FC = () => {
-  const [formData, setFormData] = useState<SignInFormData>({
+  const navigate = useNavigate()
+  const { signIn, signInWithGoogle, signInWithGitHub, user, loading: authLoading } = useAuth()
+  
+  const [formData, setFormData] = useState<FormData>({
     email: '',
     password: ''
   })
   const [errors, setErrors] = useState<FormErrors>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loading, setLoading] = useState(createLoadingState())
   const [showPassword, setShowPassword] = useState(false)
 
-  // Email validation - blocks temporary email providers
-  const tempEmailProviders = [
-    '10minutemail.com', 'guerrillamail.com', 'mailinator.com', 'yopmail.com',
-    'temp-mail.org', 'throwaway.email', 'getnada.com', 'maildrop.cc',
-    'tempail.com', 'sharklasers.com', 'grr.la', 'spam4.me'
-  ]
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user && !authLoading) {
+      navigate('/')
+    }
+  }, [user, authLoading, navigate])
 
   const validateEmail = (email: string): string | undefined => {
     if (!email) return 'Email is required'
@@ -64,10 +74,6 @@ export const SignIn: React.FC = () => {
     if (!emailRegex.test(email)) return 'Please enter a valid email address'
     
     const domain = email.split('@')[1]?.toLowerCase()
-    if (tempEmailProviders.some(provider => domain?.includes(provider))) {
-      return 'Temporary email addresses are not allowed'
-    }
-    
     return undefined
   }
 
@@ -89,9 +95,10 @@ export const SignIn: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
+    
+    // Clear previous errors
     setErrors({})
-
+    
     // Validate form
     const newErrors: FormErrors = {}
     
@@ -103,21 +110,66 @@ export const SignIn: React.FC = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
-      setIsSubmitting(false)
       return
     }
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Sign in with email/password
+    setLoading(prev => ({ ...prev, signIn: true }))
     
-    // Show form data in alert (temporary)
-    alert(`Sign In Data:\nEmail: ${formData.email}\nPassword: ${formData.password}`)
-    
-    setIsSubmitting(false)
+    try {
+      const { error } = await signIn(formData.email, formData.password)
+      
+      if (error) {
+        setErrors({ general: getAuthErrorMessage(error) })
+      } else {
+        // Success - navigation will be handled by useEffect
+      }
+    } catch (error) {
+      setErrors({ general: 'An unexpected error occurred. Please try again.' })
+    } finally {
+      setLoading(prev => ({ ...prev, signIn: false }))
+    }
   }
 
-  const handleOAuthSignIn = (provider: 'google' | 'github') => {
-    alert(`Sign in with ${provider} clicked - will be implemented with Supabase`)
+  const handleGoogleSignIn = async () => {
+    setLoading(prev => ({ ...prev, google: true }))
+    setErrors({})
+    
+    try {
+      const { error } = await signInWithGoogle()
+      if (error) {
+        setErrors({ general: getAuthErrorMessage(error) })
+      }
+    } catch (error) {
+      setErrors({ general: 'An error occurred while signing in with Google.' })
+    } finally {
+      setLoading(prev => ({ ...prev, google: false }))
+    }
+  }
+
+  const handleGitHubSignIn = async () => {
+    setLoading(prev => ({ ...prev, github: true }))
+    setErrors({})
+    
+    try {
+      const { error } = await signInWithGitHub()
+      if (error) {
+        setErrors({ general: getAuthErrorMessage(error) })
+      }
+    } catch (error) {
+      setErrors({ general: 'An error occurred while signing in with GitHub.' })
+    } finally {
+      setLoading(prev => ({ ...prev, github: false }))
+    }
+  }
+
+  // Show loading spinner while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      </div>
+    )
   }
 
   return (
@@ -137,10 +189,10 @@ export const SignIn: React.FC = () => {
         {/* Header */}
         <div className="text-center">
           <Link to="/" className="inline-block mb-4 text-gray-400 hover:text-white transition-colors">
-            ← Back to Homepage
+            ← Ana Sayfaya Dön
           </Link>
-          <h2 className="text-4xl font-bold text-white mb-2">Welcome Back</h2>
-          <p className="text-gray-300">Sign in to your CloneVoice account</p>
+          <h2 className="text-4xl font-bold text-white mb-2 font-heading">Hoş Geldiniz</h2>
+          <p className="text-gray-300 font-body">Hesabınıza giriş yapın</p>
         </div>
 
         <Card variant="glass">
@@ -150,21 +202,31 @@ export const SignIn: React.FC = () => {
               <Button
                 variant="glass"
                 size="lg"
-                onClick={() => handleOAuthSignIn('google')}
+                onClick={handleGoogleSignIn}
+                disabled={loading.google || loading.github}
                 className="w-full flex items-center justify-center gap-3 font-medium"
               >
-                <GoogleIcon />
-                Continue with Google
+                {loading.google ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  <GoogleIcon />
+                )}
+                Google ile Giriş Yap
               </Button>
               
               <Button
                 variant="outline"
                 size="lg"
-                onClick={() => handleOAuthSignIn('github')}
+                onClick={handleGitHubSignIn}
+                disabled={loading.google || loading.github}
                 className="w-full flex items-center justify-center gap-3 font-medium"
               >
-                <GitHubIcon />
-                Continue with GitHub
+                {loading.github ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  <GitHubIcon />
+                )}
+                GitHub ile Giriş Yap
               </Button>
             </div>
 
@@ -277,18 +339,19 @@ export const SignIn: React.FC = () => {
               </div>
 
               <Button
+                type="submit"
                 variant="primary"
                 size="lg"
-                disabled={isSubmitting}
+                disabled={loading.signIn}
                 className="w-full font-semibold"
               >
-                {isSubmitting ? (
+                {loading.signIn ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
-                    Signing in...
+                    Giriş Yapılıyor...
                   </div>
                 ) : (
-                  'Sign In'
+                  'Giriş Yap'
                 )}
               </Button>
             </form>

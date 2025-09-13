@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Card, CardBody, Button } from '../ui'
+import { useAuth } from '../../contexts/AuthContext'
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -54,6 +55,9 @@ interface FormErrors {
 }
 
 export const SignUp: React.FC = () => {
+  const { signUp, signInWithGoogle, signInWithGitHub, user, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
+  
   const [formData, setFormData] = useState<SignUpFormData>({
     firstName: '',
     lastName: '',
@@ -65,6 +69,13 @@ export const SignUp: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user && !authLoading) {
+      navigate('/')
+    }
+  }, [user, authLoading, navigate])
 
   // Email validation - blocks temporary email providers
   const tempEmailProviders = [
@@ -157,17 +168,53 @@ export const SignUp: React.FC = () => {
       return
     }
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Show form data in alert (temporary)
-    alert(`Sign Up Data:\nFirst Name: ${formData.firstName}\nLast Name: ${formData.lastName}\nEmail: ${formData.email}\nPassword: ${formData.password}\nConfirm Password: ${formData.confirmPassword}`)
+    try {
+      const { error } = await signUp(formData.email, formData.password, {
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      })
+
+      if (error) {
+        console.error('SignUp error:', error)
+        if (error.message.includes('User already registered')) {
+          setErrors({ general: 'This email is already registered. Please try signing in.' })
+        } else if (error.message.includes('Invalid email')) {
+          setErrors({ email: 'Invalid email address' })
+        } else if (error.message.includes('Password') || error.message.includes('password')) {
+          setErrors({ password: 'Password is too weak. Please try a stronger password.' })
+        } else if (error.message.includes('Email rate limit exceeded')) {
+          setErrors({ general: 'Too many attempts. Please wait before trying again.' })
+        } else {
+          setErrors({ general: error.message || 'An error occurred during registration. Please try again.' })
+        }
+      } else {
+        // Successful registration - redirect to home page
+        navigate('/')
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      setErrors({ general: 'An unexpected error occurred. Please try again.' })
+    }
     
     setIsSubmitting(false)
   }
 
-  const handleOAuthSignUp = (provider: 'google' | 'github') => {
-    alert(`Sign up with ${provider} clicked - will be implemented with Supabase`)
+  const handleOAuthSignUp = async (provider: 'google' | 'github') => {
+    try {
+      let error
+      if (provider === 'google') {
+        ({ error } = await signInWithGoogle())
+      } else {
+        ({ error } = await signInWithGitHub())
+      }
+
+      if (error) {
+        setErrors({ general: `An error occurred while signing in with ${provider === 'google' ? 'Google' : 'GitHub'}.` })
+      }
+      // Başarılı olursa AuthContext navigate'i handle eder
+    } catch (error) {
+      setErrors({ general: 'An unexpected error occurred during OAuth sign in.' })
+    }
   }
 
   const passwordValidation = validatePassword(formData.password)
@@ -428,6 +475,7 @@ export const SignUp: React.FC = () => {
               <Button
                 variant="primary"
                 size="lg"
+                type="submit"
                 disabled={isSubmitting}
                 className="w-full font-semibold"
               >
