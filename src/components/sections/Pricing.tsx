@@ -23,15 +23,15 @@ const AIIcon = () => (
 export const Pricing: React.FC = () => {
   const creditPackages = [
     {
-      name: "Demo",
+      name: "Starter",
       credits: 25,
-      price: "9",
-      description: "Try our AI voice cloning technology",
+      price: "5",
+      description: "Perfect for trying our AI voice cloning",
       popular: false,
-      pricePerClone: 1.80,
+      pricePerClone: 1.00,
       features: [
         "25 AI credits",
-        "5 voice clones (5 credits each)",
+        "5 voice clones",
         "High-quality audio output",
         "Commercial use license",
         "Email support"
@@ -39,14 +39,14 @@ export const Pricing: React.FC = () => {
     },
     {
       name: "Standard",
-      credits: 75,
-      price: "29",
+      credits: 100,
+      price: "18",
       description: "Best value for regular voice cloning",
       popular: false,
-      pricePerClone: 1.93,
+      pricePerClone: 0.90,
       features: [
-        "75 AI credits",
-        "15 voice clones (5 credits each)",
+        "100 AI credits",
+        "20 voice clones",
         "High-quality audio output", 
         "Commercial use license",
         "Email support"
@@ -54,32 +54,32 @@ export const Pricing: React.FC = () => {
     },
     {
       name: "Popular",
-      credits: 200,
-      price: "69",
+      credits: 250,
+      price: "40",
       description: "Most popular choice for creators",
       popular: true,
-      pricePerClone: 1.73,
+      pricePerClone: 0.80,
       features: [
-        "200 AI credits",
-        "40 voice clones (5 credits each)",
-        "High-quality audio output",
+        "250 AI credits",
+        "50 voice clones)",
+        "High-quality audio output", 
         "Commercial use license",
-        "Priority support"
+        "Email support"
       ]
     },
     {
-      name: "Bulk",
+      name: "Professional",
       credits: 500,
-      price: "149",
+      price: "70",
       description: "Maximum savings for heavy usage",
       popular: false,
-      pricePerClone: 1.49,
+      pricePerClone: 0.70,
       features: [
         "500 AI credits",
-        "100 voice clones (5 credits each)",
-        "High-quality audio output",
+        "100 voice clones",
+        "High-quality audio output", 
         "Commercial use license",
-        "Priority support"
+        "Email support"
       ]
     }
   ]
@@ -123,26 +123,26 @@ export const Pricing: React.FC = () => {
               key={index}
               className={`relative ${
                 pack.popular
-                  ? 'ring-2 ring-white/30 shadow-2xl scale-105 bg-white/10'
+                  ? 'ring-2 ring-white/30 shadow-2xl bg-white/10'
                   : 'hover:bg-white/5'
               }`}
               hover={!pack.popular}
               variant="glass"
             >
               {pack.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
                   <Badge variant="primary" size="md" className="font-semibold">
                     Most Popular
                   </Badge>
                 </div>
               )}
 
-              <CardBody className="p-8">
+              <CardBody className="pt-6">
                 <div className="text-center space-y-6">
                   {/* Pack Header */}
                   <div className="space-y-2">
                     <h3 className="text-2xl font-bold text-white">{pack.name}</h3>
-                    <p className="text-gray-300">{pack.description}</p>
+                    <p className="text-gray-300 h-10">{pack.description}</p>
                   </div>
 
                   {/* Price */}
@@ -152,7 +152,7 @@ export const Pricing: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 px-4">
                       <CreditIcon />
-                      <span className="text-lg font-semibold text-white">{pack.credits} Credits</span>
+                      <span className="text-lg font-semibold text-white font-mono">{pack.credits} Credits</span>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-gray-400">≈ {Math.floor(pack.credits / 5)} voice clones</p>

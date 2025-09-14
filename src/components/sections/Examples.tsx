@@ -2,10 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import { Card, CardBody, Button, Badge } from "../ui";
 import morganFreemanOriginal from "../../assets/audio/original-morgan-freeman.mp3";
 import morganFreemanAI from "../../assets/audio/ai-morgan-freeman.wav";
+import steveJobsOriginal from "../../assets/audio/original-steve-jobs.mp3";
+import steveJobsAI from "../../assets/audio/ai-steve-jobs.wav";
 import rickOriginal from "../../assets/audio/original-rick.mp3";
 import rickAI from "../../assets/audio/ai-rick.wav";
 
 import morganFreemanImage from "../../assets/img/morgan-freeman.jpg"
+import steveJobsImage from "../../assets/img/steve-jobs.jpg"
 import rickImage from "../../assets/img/rick-sanchez.png"
 
 // SVG Icons
@@ -74,13 +77,15 @@ interface AudioPlayerProps {
   isPlaying: boolean;
   onTogglePlay: () => void;
   isSpecial?: boolean;
+  volume?: number;
 }
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
   audioSrc,
   isPlaying,
   onTogglePlay,
-  isSpecial
+  isSpecial,
+  volume
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -91,6 +96,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const audio = audioRef.current;
     if (!audio) return;
 
+    audio.volume = volume || 1;
     console.log('Audio player effect:', { isPlaying, audioSrc });
 
     if (isPlaying) {
@@ -136,6 +142,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const handleProgressClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || duration === 0) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickProgress = clickX / rect.width;
+    const newTime = clickProgress * duration;
+    
+    audio.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
@@ -152,9 +171,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         {isPlaying ? <PauseIcon /> : <PlayIcon />}
       </button>
       <div className="flex-1">
-        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+        <div 
+          className="w-full h-2 bg-white/10 rounded-full overflow-hidden cursor-pointer hover:bg-white/20 transition-colors"
+          onClick={handleProgressClick}
+        >
           <div
-            className="h-full bg-white rounded-full transition-all duration-300"
+            className="h-full bg-white rounded-full transition-all duration-300 pointer-events-none"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -174,7 +196,8 @@ export const Examples: React.FC = () => {
   // Text-to-Speech Examples (Voice Cloning with Text Input)
   const textToSpeechExamples = [
     {
-      id: "morgan-freeman-tts",
+      id: "morgan-freeman",
+      volume: 0.3,
       name: "Morgan Freeman",
       description: "Actor, narrator",
       avatar: morganFreemanImage,
@@ -188,7 +211,8 @@ export const Examples: React.FC = () => {
       }
     },
     {
-      id: "rick-tts",
+      id: "rick-sanchez",
+      volume: 0.3,
       name: "Rick Sanchez",
       description: "Fictional character",
       avatar: rickImage,
@@ -202,13 +226,14 @@ export const Examples: React.FC = () => {
       }
     },
     {
-      id: "professional-voice-tts",
-      name: "Professional Speaker",
-      description: "Business presentation style",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      sourceAudio: "/examples/business-voice.mp3",
-      textPrompt: "Our quarterly results demonstrate exceptional growth across all key performance indicators and market segments.",
-      clonedAudio: "/examples/business-cloned.mp3",
+      id: "steve-jobs",
+      volume: 1,
+      name: "Steve Jobs",
+      description: "CO-Founder Of Apple",
+      avatar: steveJobsImage,
+      sourceAudio: steveJobsOriginal,
+      textPrompt: "But wait a minute... There is one more thing... We are introducing our new CloneVoice.app",
+      clonedAudio: steveJobsAI,
       settings: {
         emotion: "Professional",
         speed: "Business Pace",
@@ -219,72 +244,71 @@ export const Examples: React.FC = () => {
 
   const speechToSpeechExamples = [
     {
-      id: "shakespeare-modern",
-      name: "Shakespeare → Modern CEO",
-      description: "Classic literature to business speak",
-      originalText: "To be or not to be, that is the question",
-      clonedText:
-        "To innovate or not to innovate, that is the strategic decision we must make",
-      originalVoice: "Shakespearean theater style",
-      clonedVoice: "Modern CEO presentation style",
-      audioSrc: "/examples/shakespeare-ceo.mp3",
+      id: "businessman-morgan",
+      sourceCharacter: {
+        name: "Business Executive",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
+        description: "Discussing quarterly results"
+      },
+      targetCharacter: {
+        name: "Morgan Freeman",
+        avatar: morganFreemanImage,
+        description: "Iconic narrator voice"
+      },
+      sourceAudio: "/examples/business-source.mp3", // Placeholder - will be added later
+      sourceText: "Our quarterly performance exceeded expectations with a 15% growth in revenue",
+      targetAudio: morganFreemanOriginal,
+      resultAudio: "/examples/business-morgan-result.mp3", // Placeholder - will be added later
+      settings: {
+        style: "Narrative",
+        pace: "Measured",
+        emotion: "Authoritative"
+      }
     },
     {
-      id: "child-professor",
-      name: "Child → Professor",
-      description: "Young voice to academic authority",
-      originalText: "I love playing with my toys and watching cartoons",
-      clonedText:
-        "The pedagogical implications of interactive learning through recreational activities",
-      originalVoice: "8-year-old child",
-      clonedVoice: "University professor",
-      audioSrc: "/examples/child-professor.mp3",
+      id: "casual-rick",
+      sourceCharacter: {
+        name: "Casual Speaker",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face",
+        description: "Everyday conversation"
+      },
+      targetCharacter: {
+        name: "Rick Sanchez",
+        avatar: rickImage,
+        description: "Mad scientist energy"
+      },
+      sourceAudio: "/examples/casual-source.mp3", // Placeholder - will be added later
+      sourceText: "Hey, I just discovered this amazing new technology that could change everything",
+      targetAudio: rickOriginal,
+      resultAudio: "/examples/casual-rick-result.mp3", // Placeholder - will be added later
+      settings: {
+        style: "Energetic",
+        pace: "Fast",
+        emotion: "Excited"
+      }
     },
     {
-      id: "casual-news",
-      name: "Casual → News Anchor",
-      description: "Informal speech to professional broadcast",
-      originalText:
-        "Hey, so like, there was this crazy thing that happened today",
-      clonedText:
-        "Good evening, I'm reporting on the significant events that transpired earlier today",
-      originalVoice: "Casual conversation",
-      clonedVoice: "Professional news anchor",
-      audioSrc: "/examples/casual-news.mp3",
-    },
-    {
-      id: "robotic-human",
-      name: "Robotic → Human",
-      description: "Monotone AI to natural human speech",
-      originalText:
-        "Processing request. System status nominal. Task completed.",
-      clonedText:
-        "I'm working on your request right now. Everything looks good, and I've finished the task!",
-      originalVoice: "AI robot voice",
-      clonedVoice: "Friendly human assistant",
-      audioSrc: "/examples/robotic-human.mp3",
-    },
-    {
-      id: "whisper-shout",
-      name: "Whisper → Motivational",
-      description: "Quiet speech to energetic motivation",
-      originalText: "I don't think I can do this, it's too difficult",
-      clonedText:
-        "YOU'VE GOT THIS! Nothing is impossible when you believe in yourself!",
-      originalVoice: "Uncertain whisper",
-      clonedVoice: "High-energy motivational speaker",
-      audioSrc: "/examples/whisper-motivational.mp3",
-    },
-    {
-      id: "accent-neutral",
-      name: "Heavy Accent → Neutral",
-      description: "Strong regional accent to neutral English",
-      originalText: "G'day mate, how ya goin' down under today?",
-      clonedText: "Hello there, how are you doing today?",
-      originalVoice: "Strong Australian accent",
-      clonedVoice: "Neutral American English",
-      audioSrc: "/examples/accent-neutral.mp3",
-    },
+      id: "child-professional",
+      sourceCharacter: {
+        name: "Young Student",
+        avatar: "https://images.unsplash.com/photo-1503919005314-30d93d07d823?w=80&h=80&fit=crop&crop=face",
+        description: "Curious 8-year-old"
+      },
+      targetCharacter: {
+        name: "Professional Speaker",
+        avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face",
+        description: "Authoritative presenter"
+      },
+      sourceAudio: "/examples/child-source.mp3", // Placeholder - will be added later
+      sourceText: "I love science and want to learn about how computers work and stuff",
+      targetAudio: "/examples/professional-target.mp3", // Placeholder - will be added later
+      resultAudio: "/examples/child-professional-result.mp3", // Placeholder - will be added later
+      settings: {
+        style: "Educational",
+        pace: "Clear",
+        emotion: "Confident"
+      }
+    }
   ];
 
   const handlePlayToggle = (id: string, type: 'source' | 'cloned') => {
@@ -306,7 +330,6 @@ export const Examples: React.FC = () => {
       id="examples"
       className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-gray-950 to-black relative overflow-hidden border-b-4 border-gray-900"
     >
-      {/* Top gradient transition from Features */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-gray-900/50 to-transparent pointer-events-none"></div>
 
       {/* Grain overlay */}
@@ -400,6 +423,7 @@ export const Examples: React.FC = () => {
                       </Badge>
                     </div>
                     <AudioPlayer
+                      volume={example.volume}
                       audioSrc={example.sourceAudio}
                       isPlaying={playingId === example.id && playingType === 'source'}
                       onTogglePlay={() => handlePlayToggle(example.id, 'source')}
@@ -415,7 +439,7 @@ export const Examples: React.FC = () => {
                       </Badge>
                     </div>
                     <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-                      <p className="text-sm text-gray-300 italic">
+                      <p className="text-sm text-gray-300 italic h-14">
                         "{example.textPrompt}"
                       </p>
                     </div>
@@ -429,6 +453,7 @@ export const Examples: React.FC = () => {
                       </Badge>
                     </div>
                     <AudioPlayer
+                      volume={example.volume}
                       audioSrc={example.clonedAudio}
                       isPlaying={playingId === example.id && playingType === 'cloned'}
                       onTogglePlay={() => handlePlayToggle(example.id, 'cloned')}
@@ -457,76 +482,115 @@ export const Examples: React.FC = () => {
         )}
 
         {activeTab === "speech-to-speech" && (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {speechToSpeechExamples.map((example) => (
               <Card key={example.id} hover className="overflow-hidden">
                 <CardBody className="p-6 space-y-6">
-                  {/* Header */}
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-white mb-2">
-                      {example.name}
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      {example.description}
-                    </p>
-                  </div>
-
-                  {/* Transformation */}
-                  <div className="space-y-4">
-                    {/* Original */}
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="glass" size="sm">
-                          Original
-                        </Badge>
+                  {/* Character Combination Header */}
+                  <div className="text-center space-y-4">
+                    {/* Character Avatars with Plus */}
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="text-center">
+                        <img
+                          src={example.sourceCharacter.avatar}
+                          alt={example.sourceCharacter.name}
+                          className="w-12 h-12 rounded-full object-cover mx-auto mb-1"
+                        />
+                        <p className="text-xs text-gray-400">{example.sourceCharacter.name}</p>
                       </div>
-                      <p className="text-sm text-gray-300 mb-2">
-                        "{example.originalText}"
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {example.originalVoice}
-                      </p>
-                    </div>
-
-                    {/* Arrow */}
-                    <div className="flex justify-center">
-                      <div className="w-8 h-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                          />
+                      
+                      <div className="w-6 h-6 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                         </svg>
                       </div>
-                    </div>
 
-                    {/* Transformed */}
-                    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="primary" size="sm">
-                          AI Transformed
-                        </Badge>
+                      <div className="text-center">
+                        <img
+                          src={example.targetCharacter.avatar}
+                          alt={example.targetCharacter.name}
+                          className="w-12 h-12 rounded-full object-cover mx-auto mb-1"
+                        />
+                        <p className="text-xs text-gray-400">{example.targetCharacter.name}</p>
                       </div>
-                      <p className="text-sm text-gray-300 mb-2">
-                        "{example.clonedText}"
-                      </p>
-                      <p className="text-xs text-white">
-                        {example.clonedVoice}
+                    </div>
+                  </div>
+
+                  {/* Source Audio */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="glass" size="sm">
+                        <VoiceIcon />
+                        Source Audio
+                      </Badge>
+                    </div>
+                    <AudioPlayer
+                      audioSrc={example.sourceAudio}
+                      isPlaying={playingId === example.id && playingType === 'source'}
+                      onTogglePlay={() => handlePlayToggle(example.id, 'source')}
+                      volume={0.3}
+                    />
+                  </div>
+
+                  {/* Target Audio */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" size="sm">
+                        🎯 Target Voice
+                      </Badge>
+                    </div>
+                    <AudioPlayer
+                      audioSrc={example.targetAudio}
+                      isPlaying={playingId === (example.id + '-target') && playingType === 'source'}
+                      onTogglePlay={() => handlePlayToggle(example.id + '-target', 'source')}
+                      volume={0.3}
+                    />
+                  </div>
+
+                  {/* Equals Sign */}
+                  <div className="flex justify-center h-0">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 9a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm0 4a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* AI Result */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="primary" size="sm">
+                        🤖 AI Result
+                      </Badge>
+                    </div>
+                    <AudioPlayer
+                      audioSrc={example.resultAudio}
+                      isPlaying={playingId === example.id && playingType === 'cloned'}
+                      onTogglePlay={() => handlePlayToggle(example.id, 'cloned')}
+                      volume={0.3}
+                      isSpecial={true}
+                    />
+                    <div className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-sm border border-blue-400/30 rounded-xl p-3">
+                      <p className="text-sm text-blue-200">
+                        Source content with target voice style
                       </p>
                     </div>
                   </div>
 
-                  {/* Audio Player */}
-                  <AudioPlayer
-                    audioSrc={example.audioSrc}
-                    isPlaying={playingId === example.id && playingType === 'cloned'}
-                    onTogglePlay={() => handlePlayToggle(example.id, 'cloned')}
-                  />
+                  {/* Settings */}
+                  <div className="pt-4 border-t border-white/10">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
+                        {example.settings.style}
+                      </span>
+                      <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
+                        {example.settings.pace}
+                      </span>
+                      <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
+                        {example.settings.emotion}
+                      </span>
+                    </div>
+                  </div>
                 </CardBody>
               </Card>
             ))}

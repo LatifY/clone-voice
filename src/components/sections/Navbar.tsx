@@ -85,6 +85,22 @@ const CreditIcon = () => (
   </svg>
 );
 
+const ShoppingCartIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5A1 1 0 006.8 19H19M9 19a1 1 0 102 0 1 1 0 00-2 0zm8 0a1 1 0 102 0 1 1 0 00-2 0z"
+    />
+  </svg>
+);
+
 const DashboardIcon = () => (
   <svg
     className="w-4 h-4"
@@ -149,7 +165,7 @@ export const Navbar: React.FC = () => {
 
   const navItems = [
     { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
+    { label: "Pricing", href: "/pricing", isRoute: true },
     { label: "Examples", href: "#examples" },
     { label: "Contact", href: "#contact" },
   ];
@@ -199,16 +215,26 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={(e) => handleSmoothScroll(e, item.href)}
-                className="text-gray-300 hover:text-white transition-colors font-medium cursor-pointer"
-              >
-                {item.label}
-              </a>
-            ))}
+            {navItems.map((item) => 
+              item.isRoute ? (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className="text-gray-300 hover:text-white transition-colors font-medium"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleSmoothScroll(e, item.href)}
+                  className="text-gray-300 hover:text-white transition-colors font-medium cursor-pointer"
+                >
+                  {item.label}
+                </a>
+              )
+            )}
           </div>
 
           {/* Desktop Buttons */}
@@ -289,6 +315,15 @@ export const Navbar: React.FC = () => {
                         Edit Profile
                       </Link>
 
+                      <Link
+                        to="/pricing"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <ShoppingCartIcon />
+                        Buy Credits
+                      </Link>
+
                       <button
                         onClick={handleSignOut}
                         className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
@@ -339,16 +374,27 @@ export const Navbar: React.FC = () => {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden border-t border-gray-800 py-4 space-y-4">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={(e) => handleSmoothScroll(e, item.href)}
-                className="block px-4 py-2 text-gray-300 hover:text-white transition-colors font-medium cursor-pointer"
-              >
-                {item.label}
-              </a>
-            ))}
+            {navItems.map((item) => 
+              item.isRoute ? (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className="block px-4 py-2 text-gray-300 hover:text-white transition-colors font-medium"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleSmoothScroll(e, item.href)}
+                  className="block px-4 py-2 text-gray-300 hover:text-white transition-colors font-medium cursor-pointer"
+                >
+                  {item.label}
+                </a>
+              )
+            )}
 
             {/* Mobile Auth Section */}
             <div className="px-4 pt-4 border-t border-gray-800">
@@ -421,6 +467,21 @@ export const Navbar: React.FC = () => {
                       >
                         <UserIcon />
                         Edit Profile
+                      </Button>
+                    </Link>
+
+                    <Link
+                      to="/pricing"
+                      className="block"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-gray-800"
+                      >
+                        <ShoppingCartIcon />
+                        Buy Credits
                       </Button>
                     </Link>
 
