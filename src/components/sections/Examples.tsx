@@ -97,7 +97,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     if (!audio) return;
 
     audio.volume = volume || 1;
-    console.log('Audio player effect:', { isPlaying, audioSrc });
 
     if (isPlaying) {
       audio.play().catch((error) => {

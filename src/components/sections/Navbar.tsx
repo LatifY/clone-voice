@@ -134,17 +134,10 @@ const LogoutIcon = () => (
 );
 
 export const Navbar: React.FC = () => {
-  const { user, profile, signOut, loading } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-
-  // Debug logging for profile data
-  useEffect(() => {
-    console.log("Navbar - User:", user?.id);
-    console.log("Navbar - Profile:", profile);
-    console.log("Navbar - Loading:", loading);
-  }, [user, profile, loading]);
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -163,6 +156,10 @@ export const Navbar: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    console.log("Profile updated:", profile);
+  }, [profile]);
+
   const navItems = [
     { label: "Features", href: "#features" },
     { label: "Pricing", href: "/pricing", isRoute: true },
@@ -175,7 +172,7 @@ export const Navbar: React.FC = () => {
       await signOut();
       setIsUserMenuOpen(false);
     } catch (error) {
-      console.error("Sign out error:", error);
+      // Handle error silently
     }
   };
 
@@ -247,7 +244,7 @@ export const Navbar: React.FC = () => {
                   <div className="flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full">
                     <CreditIcon />
                     <span className="text-sm font-medium text-white">
-                      {profile?.credits || 147} credits
+                      {profile?.credits ?? 0} credits
                     </span>
                   </div>
 
@@ -405,7 +402,7 @@ export const Navbar: React.FC = () => {
                   <div className="flex items-center gap-2 p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
                     <CreditIcon />
                     <span className="text-sm font-medium text-white">
-                      {profile?.credits || 147} credits
+                      {profile?.credits ?? 0} credits
                     </span>
                   </div>
 

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { HomePage, PricingPage } from './components/pages'
+import { HomePage, PricingPage, TestCheckoutPage, PurchaseSuccessPage } from './components/pages'
 import { SignIn, SignUp } from './components/auth'
 import { GamepadCursor } from './components/GamepadCursor'
 import { AuthProvider } from './contexts'
@@ -12,6 +12,8 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/test-checkout" element={<TestCheckoutPage />} />
+            <Route path="/purchase-success" element={<PurchaseSuccessPage />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
           </Routes>

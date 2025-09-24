@@ -11,6 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export interface Profile {
   id: string
+  user_id: string
   credits: number
   display_name: string | null
   created_at: string

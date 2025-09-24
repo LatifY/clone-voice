@@ -75,29 +75,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         sessionStorage.removeItem(key);
       });
     } catch (storageError) {
-      console.warn("Error clearing auth storage:", storageError);
+      // Silently handle storage errors
     }
   };
 
   // Fetch user profile from database
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string): Promise<Profile | null> => {
     try {
-      console.log('Fetching profile for user:', userId);
+      // Try RPC function first for better reliability
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_user_credits_info', { user_uuid: userId });
+
+      if (!rpcError && rpcData) {
+        // Convert RPC response to Profile format
+        return {
+          id: rpcData.profile_id,
+          user_id: userId,
+          display_name: rpcData.display_name,
+          credits: rpcData.credits,
+          created_at: rpcData.created_at
+        };
+      }
+
+      // Fallback to direct query
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, display_name, credits, created_at")
-        .eq("id", userId)
+        .select("id, user_id, display_name, credits, created_at")
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching profile:", error);
+        // If profile doesn't exist, this is expected for new users
+        if (error.code === 'PGRST116') {
+          return null;
+        }
         return null;
       }
 
-      console.log('Fetched profile data:', data);
       return data;
     } catch (error) {
-      console.error("Unexpected error fetching profile:", error);
       return null;
     }
   };
@@ -106,73 +122,71 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const createProfile = async (
     user: User,
     userData?: { firstName: string; lastName: string }
-  ) => {
+  ): Promise<Profile | null> => {
     try {
       const profileData = {
-        id: user.id,
+        user_id: user.id,
         display_name: userData
           ? `${userData.firstName} ${userData.lastName}`
           : user.user_metadata?.full_name ||
             user.email?.split("@")[0] ||
             "User",
-        credits: 10, // Free credits on signup
+        credits: 10,
       };
 
-      console.log('Creating profile with data:', profileData);
-
-      const { data, error } = await supabase
+      // First try direct insert (should work with proper RLS policies)
+      const { data: insertData, error: insertError } = await supabase
         .from("profiles")
-        .upsert([profileData], {
-          onConflict: "id",
-          ignoreDuplicates: false,
-        })
-        .select("id, display_name, credits, created_at")
+        .insert([profileData])
+        .select("id, user_id, display_name, credits, created_at")
         .maybeSingle();
 
-      if (error) {
-        console.error("Error creating profile:", error);
-
-        // If it's an RLS error, try to fetch existing profile instead
-        if (
-          error.code === "42501" ||
-          error.message?.includes("row-level security")
-        ) {
-          console.log(
-            "RLS prevented profile creation, trying to fetch existing profile..."
-          );
-          return await fetchProfile(user.id);
-        }
-
-        return null;
+      if (!insertError && insertData) {
+        return insertData;
       }
 
-      console.log('Created profile successfully:', data);
-      return data;
-    } catch (error) {
-      console.error("Unexpected error creating profile:", error);
-      // Try to fetch existing profile as fallback
-      try {
+      // If direct insert fails, try RPC function as fallback
+      const { error: rpcError } = await supabase.rpc('create_user_profile', {
+        user_uuid: user.id,
+        display_name_text: profileData.display_name,
+        initial_credits: profileData.credits
+      });
+
+      if (!rpcError) {
+        // RPC succeeded, fetch the created profile
         return await fetchProfile(user.id);
-      } catch (fetchError) {
-        console.error("Failed to fetch profile as fallback:", fetchError);
-        return null;
       }
+
+      return null;
+    } catch (error) {
+      return null;
     }
   };
 
   // Initialize auth state
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
+
     const initializeAuth = async () => {
       try {
+        // Set a maximum timeout for initialization
+        timeoutId = setTimeout(() => {
+          if (mounted) {
+            setLoading(false);
+          }
+        }, 3000); // 3 second timeout
+
         const {
           data: { session },
           error,
         } = await supabase.auth.getSession();
 
-        if (error) {
-          console.error("Error getting session:", error);
+        if (error || !mounted) {
           if (mounted) {
+            setSession(null);
+            setUser(null);
+            setProfile(null);
             setLoading(false);
           }
           return;
@@ -183,17 +197,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(session?.user ?? null);
 
           if (session?.user) {
-            console.log('Initial auth - fetching profile for:', session.user.id);
-            const profileData = await fetchProfile(session.user.id);
-            console.log('Initial auth - profile data:', profileData);
-            setProfile(profileData);
+            // Try to fetch profile with timeout
+            const profilePromise = fetchProfile(session.user.id);
+            const profileTimeoutPromise = new Promise<Profile | null>((resolve) =>
+              setTimeout(() => resolve(null), 2000)
+            );
+
+            const profileData = await Promise.race([profilePromise, profileTimeoutPromise]);
+            if (mounted) {
+              setProfile(profileData);
+            }
           }
 
+          clearTimeout(timeoutId);
           setLoading(false);
         }
       } catch (error) {
-        console.error("Unexpected error initializing auth:", error);
         if (mounted) {
+          clearTimeout(timeoutId);
           setLoading(false);
         }
       }
@@ -207,34 +228,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!mounted) return;
 
       try {
-        console.log('Auth state change event:', event);
-        console.log('Session user:', session?.user?.id);
-        
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          console.log('Fetching profile for user:', session.user.id);
-          let profileData = await fetchProfile(session.user.id);
-          console.log('Profile data after fetch:', profileData);
+          // Only fetch profile for new sessions or sign-ins to avoid unnecessary calls
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            let profileData = await fetchProfile(session.user.id);
 
-          // Only create profile if it doesn't exist AND it's a new signup
-          // Check if user was created recently (within last 30 seconds) OR has signup flag
-          if (!profileData && event === "SIGNED_IN") {
-            const userCreatedAt = new Date(session.user.created_at);
-            const now = new Date();
-            const timeDiff = now.getTime() - userCreatedAt.getTime();
-            const isRecentSignup = timeDiff < 30000; // 30 seconds
-            const hasSignupFlag =
-              session.user.user_metadata?.is_new_signup === true;
-
-            console.log('Checking if should create profile:');
-            console.log('- isRecentSignup:', isRecentSignup);
-            console.log('- hasSignupFlag:', hasSignupFlag);
-            console.log('- timeDiff:', timeDiff);
-
-            if (isRecentSignup || hasSignupFlag) {
-              // Extract user data from metadata for profile creation
+            if (!profileData) {
               const userData =
                 session.user.user_metadata?.first_name &&
                 session.user.user_metadata?.last_name
@@ -244,32 +246,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     }
                   : undefined;
 
-              console.log('Creating profile with userData:', userData);
               profileData = await createProfile(session.user, userData);
-              console.log('Profile created:', profileData);
-            } else {
-              // If profile doesn't exist for existing user, create one as fallback
-              console.log('Creating fallback profile for existing user');
-              profileData = await createProfile(session.user, undefined);
-              console.log('Fallback profile created:', profileData);
+            }
+
+            if (mounted) {
+              setProfile(profileData);
             }
           }
-
-          console.log('Setting profile:', profileData);
-          setProfile(profileData);
         } else {
           setProfile(null);
         }
 
         setLoading(false);
       } catch (error) {
-        console.error("Error in auth state change:", error);
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     });
 
     return () => {
       mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       subscription.unsubscribe();
     };
   }, []);
@@ -280,7 +280,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     userData: { firstName: string; lastName: string }
   ) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -288,16 +288,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             full_name: `${userData.firstName} ${userData.lastName}`,
             first_name: userData.firstName,
             last_name: userData.lastName,
-            is_new_signup: true, // Flag to identify new signups
+            is_new_signup: true,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-
-      if (!error && data.user) {
-        // Profile will be created automatically via auth state change listener for new signups
-        console.log("User signed up successfully");
-      }
 
       return { error };
     } catch (error) {
@@ -356,17 +351,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setSigningOut(true);
 
-      // Clear local state immediately for better UX
+      // Clear all storage first
+      clearAuthStorage();
+
+      // Clear local state immediately
       setUser(null);
       setProfile(null);
       setSession(null);
 
-      // Clear all authentication storage
-      clearAuthStorage();
-
-      // Try to sign out from Supabase with timeout
+      // Try to sign out from Supabase with a short timeout
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("SignOut timeout")), 2000)
+        setTimeout(() => reject(new Error("SignOut timeout")), 1000)
       );
 
       const signOutPromise = supabase.auth.signOut({ scope: "global" });
@@ -374,25 +369,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         await Promise.race([signOutPromise, timeoutPromise]);
       } catch (timeoutError) {
-        console.warn("SignOut API call timed out, but local state cleared");
+        // Continue even if timeout occurs
       }
 
-      // Double-check that storage is cleared
+      // Force clear storage again
       clearAuthStorage();
 
       setSigningOut(false);
+      
+      // Force navigation to signin page
+      setTimeout(() => {
+        window.location.href = '/signin';
+      }, 100);
+
       return { error: null };
     } catch (error) {
-      console.warn("SignOut error (but local state cleared):", error);
-
-      // Ensure local state is cleared even if there's an error
+      // Force clear everything even on error
       setUser(null);
       setProfile(null);
       setSession(null);
       clearAuthStorage();
-
       setSigningOut(false);
-      // Don't return the error to user, sign out was successful locally
+      
+      // Force navigation even on error
+      setTimeout(() => {
+        window.location.href = '/signin';
+      }, 100);
+
       return { error: null };
     }
   };
@@ -418,8 +421,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { data, error } = await supabase
         .from("profiles")
         .update(updates)
-        .eq("id", user.id)
-        .select("id, display_name, credits, created_at")
+        .eq("user_id", user.id)
+        .select("id, user_id, display_name, credits, created_at")
         .maybeSingle();
 
       if (!error && data) {

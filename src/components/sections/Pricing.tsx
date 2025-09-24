@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardBody, Button, Badge } from '../ui'
+import { creditPackages, createCheckout, processTestPurchase, setupPaddleEventListeners } from '../../lib/paddle'
+import { useAuth } from '../../contexts'
 
 // SVG Icons
 const CheckIcon = () => (
@@ -20,69 +22,188 @@ const AIIcon = () => (
   </svg>
 )
 
-export const Pricing: React.FC = () => {
-  const creditPackages = [
-    {
-      name: "Starter",
-      credits: 25,
-      price: "5",
-      description: "Perfect for trying our AI voice cloning",
-      popular: false,
-      pricePerClone: 1.00,
-      features: [
-        "25 AI credits",
-        "5 voice clones",
-        "High-quality audio output",
-        "Commercial use license",
-        "Email support"
-      ]
-    },
-    {
-      name: "Standard",
-      credits: 100,
-      price: "18",
-      description: "Best value for regular voice cloning",
-      popular: false,
-      pricePerClone: 0.90,
-      features: [
-        "100 AI credits",
-        "20 voice clones",
-        "High-quality audio output", 
-        "Commercial use license",
-        "Email support"
-      ]
-    },
-    {
-      name: "Popular",
-      credits: 250,
-      price: "40",
-      description: "Most popular choice for creators",
-      popular: true,
-      pricePerClone: 0.80,
-      features: [
-        "250 AI credits",
-        "50 voice clones)",
-        "High-quality audio output", 
-        "Commercial use license",
-        "Email support"
-      ]
-    },
-    {
-      name: "Professional",
-      credits: 500,
-      price: "70",
-      description: "Maximum savings for heavy usage",
-      popular: false,
-      pricePerClone: 0.70,
-      features: [
-        "500 AI credits",
-        "100 voice clones",
-        "High-quality audio output", 
-        "Commercial use license",
-        "Email support"
-      ]
+const LoadingIcon = () => (
+  <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+)
+
+// Credit Package Card Component
+interface CreditCardProps {
+  package: typeof creditPackages[0]
+  onPurchase: (packageId: string) => Promise<void>
+  loading: boolean
+  isAuthenticated: boolean
+}
+
+const CreditCard: React.FC<CreditCardProps> = ({ package: pkg, onPurchase, loading, isAuthenticated }) => {
+  const [isProcessing, setIsProcessing] = useState(false)
+  
+  const handlePurchase = async () => {
+    if (!isAuthenticated) {
+      // Redirect to sign in
+      window.location.href = '/signin'
+      return
     }
+    
+    setIsProcessing(true)
+    try {
+      await onPurchase(pkg.id)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+  
+  const features = [
+    `${pkg.credits} AI credits`,
+    `${Math.floor(pkg.credits / 5)} voice clones`,
+    "High-quality audio output",
+    "Commercial use license", 
+    "Email support"
   ]
+  
+  return (
+    <Card
+      className={`relative ${
+        pkg.popular
+          ? 'ring-2 ring-white/30 shadow-2xl bg-white/10'
+          : 'hover:bg-white/5'
+      }`}
+      hover={!pkg.popular}
+      variant="glass"
+    >
+      {pkg.popular && (
+        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+          <Badge variant="primary" size="md" className="font-semibold">
+            Most Popular
+          </Badge>
+        </div>
+      )}
+
+      <CardBody className="pt-6">
+        <div className="text-center space-y-6">
+          {/* Pack Header */}
+          <div className="space-y-2">
+            <h3 className="text-2xl font-bold text-white">{pkg.name}</h3>
+            <p className="text-gray-300 h-10">{pkg.description}</p>
+          </div>
+
+          {/* Price */}
+          <div className="space-y-3">
+            <div className="flex items-baseline justify-center space-x-1">
+              <span className="text-4xl font-bold text-white">${pkg.price}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 px-4">
+              <CreditIcon />
+              <span className="text-lg font-semibold text-white font-mono">{pkg.credits} Credits</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-gray-400">≈ {Math.floor(pkg.credits / 5)} voice clones</p>
+              <p className="text-xs text-green-400 font-medium">${(pkg.price / (pkg.credits / 5)).toFixed(2)} per voice clone</p>
+            </div>
+          </div>
+
+          {/* Features */}
+          <ul className="space-y-4 text-left">
+            {features.map((feature, featureIndex) => (
+              <li key={featureIndex} className="flex items-center space-x-3">
+                <div className="w-5 h-5 bg-green-500/20 backdrop-blur-sm border border-green-400/30 rounded-full flex items-center justify-center flex-shrink-0">
+                  <CheckIcon />
+                </div>
+                <span className="text-gray-300">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* CTA Button */}
+          <Button
+            variant={pkg.popular ? "primary" : "glass"}
+            size="lg"
+            className="w-full relative"
+            onClick={handlePurchase}
+            disabled={loading || isProcessing}
+          >
+            {isProcessing ? (
+              <div className="flex items-center gap-2">
+                <LoadingIcon />
+                {import.meta.env.VITE_TEST_MODE === 'true' ? 'Processing...' : 'Opening Checkout...'}
+              </div>
+            ) : (
+              `Buy ${pkg.credits} Credits`
+            )}
+          </Button>
+          
+          {/* Test mode indicator */}
+          {import.meta.env.VITE_TEST_MODE === 'true' && (
+            <div className="text-xs text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 rounded-lg px-2 py-1">
+              🧪 Test Mode Active
+            </div>
+          )}
+        </div>
+      </CardBody>
+    </Card>
+  )
+}
+
+export const Pricing: React.FC = () => {
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error',
+    message: string
+  } | null>(null)
+
+  // Initialize Paddle event listeners for production mode
+  useEffect(() => {
+    if (import.meta.env.VITE_TEST_MODE !== 'true') {
+      setupPaddleEventListeners().catch(console.error)
+    }
+  }, [])
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message })
+    setTimeout(() => setNotification(null), 5000)
+  }
+
+  const handlePurchase = async (packageId: string) => {
+    if (!user) {
+      showNotification('error', 'Please sign in to purchase credits')
+      return
+    }
+
+    setLoading(true)
+    
+    try {
+      const isTestMode = import.meta.env.VITE_TEST_MODE === 'true'
+      
+      if (isTestMode) {
+        // Test mode - simulate purchase
+        const result = await processTestPurchase(packageId, user.id)
+        
+        if (result.success) {
+          const selectedPackage = creditPackages.find(pkg => pkg.id === packageId)
+          showNotification('success', `🧪 Test purchase successful! ${selectedPackage?.credits} credits added to your account.`)
+        } else {
+          showNotification('error', result.error || 'Test purchase failed')
+        }
+      } else {
+        // Real mode - create Paddle checkout
+        const result = await createCheckout(packageId, user.id, user.email || '')
+        
+        if (result.success) {
+          showNotification('success', 'Paddle checkout opened! Complete your purchase in the overlay.')
+        } else {
+          showNotification('error', result.error || 'Failed to create checkout')
+        }
+      }
+    } catch (error) {
+      console.error('Purchase error:', error)
+      showNotification('error', 'An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black via-gray-900 to-gray-950 relative overflow-hidden border-b-4 border-gray-900">
@@ -99,7 +220,28 @@ export const Pricing: React.FC = () => {
       {/* Gradient orbs */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-600/6 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-blue-600/6 rounded-full blur-3xl"></div>
+      
       <div className="max-w-7xl mx-auto relative z-10">
+        {/* Notification */}
+        {notification && (
+          <div className={`fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg border backdrop-blur-sm transition-all duration-300 ${
+            notification.type === 'success' 
+              ? 'bg-green-500/20 border-green-400/30 text-green-300'
+              : 'bg-red-500/20 border-red-400/30 text-red-300'
+          }`}>
+            <div className="flex items-center gap-2">
+              {notification.type === 'success' ? (
+                <CheckIcon />
+              ) : (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              )}
+              <span className="text-sm font-medium">{notification.message}</span>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center space-y-4 mb-16">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -118,72 +260,14 @@ export const Pricing: React.FC = () => {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          {creditPackages.map((pack, index) => (
-            <Card
-              key={index}
-              className={`relative ${
-                pack.popular
-                  ? 'ring-2 ring-white/30 shadow-2xl bg-white/10'
-                  : 'hover:bg-white/5'
-              }`}
-              hover={!pack.popular}
-              variant="glass"
-            >
-              {pack.popular && (
-                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
-                  <Badge variant="primary" size="md" className="font-semibold">
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-
-              <CardBody className="pt-6">
-                <div className="text-center space-y-6">
-                  {/* Pack Header */}
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-bold text-white">{pack.name}</h3>
-                    <p className="text-gray-300 h-10">{pack.description}</p>
-                  </div>
-
-                  {/* Price */}
-                  <div className="space-y-3">
-                    <div className="flex items-baseline justify-center space-x-1">
-                      <span className="text-4xl font-bold text-white">${pack.price}</span>
-                    </div>
-                    <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 px-4">
-                      <CreditIcon />
-                      <span className="text-lg font-semibold text-white font-mono">{pack.credits} Credits</span>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-400">≈ {Math.floor(pack.credits / 5)} voice clones</p>
-                      <p className="text-xs text-green-400 font-medium">${pack.pricePerClone.toFixed(2)} per voice clone</p>
-                    </div>
-                  </div>
-
-                  {/* Features */}
-                  <ul className="space-y-4 text-left">
-                    {pack.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-green-500/20 backdrop-blur-sm border border-green-400/30 rounded-full flex items-center justify-center flex-shrink-0">
-                          <CheckIcon />
-                        </div>
-                        <span className="text-gray-300">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* CTA Button */}
-                  <Button
-                    variant={pack.popular ? "primary" : "glass"}
-                    size="lg"
-                    className="w-full"
-                    onClick={() => console.log(`Selected pack: ${pack.name}`)}
-                  >
-                    Buy {pack.credits} Credits
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
+          {creditPackages.map((pack) => (
+            <CreditCard
+              key={pack.id}
+              package={pack}
+              onPurchase={handlePurchase}
+              loading={loading}
+              isAuthenticated={!!user}
+            />
           ))}
         </div>
 
@@ -197,7 +281,7 @@ export const Pricing: React.FC = () => {
               <h3 className="text-2xl font-bold">Welcome Bonus!</h3>
             </div>
             <p className="text-xl mb-4">Get 10 free AI credits when you create your account</p>
-            <p className="text-lg text-gray-300">That's 5 voice clones to get you started - completely free!</p>
+            <p className="text-lg text-gray-300">That's 2 voice clones to get you started - completely free!</p>
           </div>
         </div>
 
