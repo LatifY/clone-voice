@@ -180,7 +180,7 @@ export const Pricing: React.FC = () => {
       if (isTestMode) {
         // Test mode - simulate purchase
         const result = await processTestPurchase(packageId, user.id)
-        
+        console.log(result);
         if (result.success) {
           const selectedPackage = creditPackages.find(pkg => pkg.id === packageId)
           showNotification('success', `🧪 Test purchase successful! ${selectedPackage?.credits} credits added to your account.`)

@@ -23,6 +23,7 @@ interface AuthContextType {
   signOut: () => Promise<{ error?: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error?: AuthError | null }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error?: any }>;
+    refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -435,6 +436,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Profile'ı manuel güncellemek için fonksiyon
+  const refreshProfile = async () => {
+    if (user) {
+      const updatedProfile = await fetchProfile(user.id);
+      setProfile(updatedProfile);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     profile,
@@ -448,6 +457,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signOut,
     resetPassword,
     updateProfile,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

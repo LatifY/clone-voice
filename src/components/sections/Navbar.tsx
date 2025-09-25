@@ -156,9 +156,7 @@ export const Navbar: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    console.log("Profile updated:", profile);
-  }, [profile]);
+  // Profile güncellendiğinde re-render olur
 
   const navItems = [
     { label: "Features", href: "#features" },
