@@ -10,15 +10,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: { 'x-client-info': 'clonevoice' }
+  },
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: localStorage,
+    storageKey: 'supabase.auth.token'
   }
 });
-
-
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    console.log('Session updated', session)
-  }
-})
 
 export interface Profile {
   id: string

@@ -1,4 +1,5 @@
 // Paddle.js integration for CloneVoice credit system
+import { useEffect } from 'react'
 import { supabase } from './supabase'
 
 // Types
@@ -97,6 +98,8 @@ export const createCheckout = async (
   userId: string,
   userEmail: string
 ): Promise<CheckoutResponse> => {
+
+  
   try {
     if (isTestMode()) {
       const testUrl = `${window.location.origin}/test-checkout?package=${packageId}&user=${userId}`
@@ -150,6 +153,8 @@ export const createCheckout = async (
   }
 }
 
+
+
 // Process test mode purchase
 let isProcessing = false;
 
@@ -158,6 +163,8 @@ export const processTestPurchase = async (
   userId: string
 ): Promise<{ success: boolean; error?: string; credits?: number }> => {
   // İşlem zaten devam ediyorsa engelleyelim
+  //const paddle = await initializePaddle()
+
   if (isProcessing) {
     return { success: false, error: 'A purchase is already in progress' };
   }
@@ -172,7 +179,7 @@ export const processTestPurchase = async (
     }
 
     // Simulate loading
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1));
 
     const update_data = {
       user_uuid: userId,
@@ -188,13 +195,6 @@ export const processTestPurchase = async (
         payment_method: 'test_mode'
       }
     }
-
-    const { data, error } = await supabase.auth.getSession()
-    const session = data?.session
-    if (!session) {
-      throw new Error('User session not available. Please log in again.')
-    }
-
     console.log('Update Data:', update_data);
     console.log('Before RPC call:', Date.now());
     console.log('User ID:', userId);

@@ -178,7 +178,6 @@ export const Pricing: React.FC = () => {
       const isTestMode = import.meta.env.VITE_TEST_MODE === 'true'
       
       if (isTestMode) {
-        // Test mode - simulate purchase
         const result = await processTestPurchase(packageId, user.id)
         console.log(result);
         if (result.success) {

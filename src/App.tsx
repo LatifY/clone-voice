@@ -1,10 +1,21 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { HomePage, PricingPage, TestCheckoutPage, PurchaseSuccessPage } from './components/pages'
-import { SignIn, SignUp } from './components/auth'
-import { GamepadCursor } from './components/GamepadCursor'
-import { AuthProvider } from './contexts'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  HomePage,
+  PricingPage,
+  TestCheckoutPage,
+  PurchaseSuccessPage,
+} from "./components/pages";
+import { SignIn, SignUp } from "./components/auth";
+import { GamepadCursor } from "./components/GamepadCursor";
+import { AuthProvider } from "./contexts";
+import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { supabase } from "./lib/supabase";
 
 function App() {
+
+
+
   return (
     <AuthProvider>
       <div className="min-h-screen bg-white">
@@ -21,7 +32,7 @@ function App() {
         </Router>
       </div>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

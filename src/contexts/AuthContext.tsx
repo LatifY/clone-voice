@@ -23,7 +23,7 @@ interface AuthContextType {
   signOut: () => Promise<{ error?: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error?: AuthError | null }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error?: any }>;
-    refreshProfile: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,6 +46,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.onAuthStateChange((_event, session: Session | null) => {
+      if (session) {
+        console.log("Auth session:", session);
+        setSession(session);
+      } else {
+        setSession(null);
+      }
+    });
+  }, []);
 
   const clearAuthStorage = () => {
     try {
@@ -84,8 +95,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchProfile = async (userId: string): Promise<Profile | null> => {
     try {
       // Try RPC function first for better reliability
-      const { data: rpcData, error: rpcError } = await supabase
-        .rpc('get_user_credits_info', { user_uuid: userId });
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "get_user_credits_info",
+        { user_uuid: userId }
+      );
 
       if (!rpcError && rpcData) {
         // Convert RPC response to Profile format
@@ -94,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           user_id: userId,
           display_name: rpcData.display_name,
           credits: rpcData.credits,
-          created_at: rpcData.created_at
+          created_at: rpcData.created_at,
         };
       }
 
@@ -107,7 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (error) {
         // If profile doesn't exist, this is expected for new users
-        if (error.code === 'PGRST116') {
+        if (error.code === "PGRST116") {
           return null;
         }
         return null;
@@ -147,10 +160,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // If direct insert fails, try RPC function as fallback
-      const { error: rpcError } = await supabase.rpc('create_user_profile', {
+      const { error: rpcError } = await supabase.rpc("create_user_profile", {
         user_uuid: user.id,
         display_name_text: profileData.display_name,
-        initial_credits: profileData.credits
+        initial_credits: profileData.credits,
       });
 
       if (!rpcError) {
@@ -164,113 +177,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Initialize auth state
   useEffect(() => {
-    let mounted = true;
-    let timeoutId: NodeJS.Timeout;
-
-    const initializeAuth = async () => {
-      try {
-        // Set a maximum timeout for initialization
-        timeoutId = setTimeout(() => {
-          if (mounted) {
-            setLoading(false);
-          }
-        }, 3000); // 3 second timeout
-
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error || !mounted) {
-          if (mounted) {
-            setSession(null);
-            setUser(null);
-            setProfile(null);
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-
-          if (session?.user) {
-            // Try to fetch profile with timeout
-            const profilePromise = fetchProfile(session.user.id);
-            const profileTimeoutPromise = new Promise<Profile | null>((resolve) =>
-              setTimeout(() => resolve(null), 2000)
-            );
-
-            const profileData = await Promise.race([profilePromise, profileTimeoutPromise]);
-            if (mounted) {
-              setProfile(profileData);
-            }
-          }
-
-          clearTimeout(timeoutId);
-          setLoading(false);
-        }
-      } catch (error) {
-        if (mounted) {
-          clearTimeout(timeoutId);
-          setLoading(false);
-        }
-      }
+    const loadSession = async () => {
+      setLoading(true);
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      setLoading(false);
     };
 
-    initializeAuth();
+    loadSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      try {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          // Only fetch profile for new sessions or sign-ins to avoid unnecessary calls
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            let profileData = await fetchProfile(session.user.id);
-
-            if (!profileData) {
-              const userData =
-                session.user.user_metadata?.first_name &&
-                session.user.user_metadata?.last_name
-                  ? {
-                      firstName: session.user.user_metadata.first_name,
-                      lastName: session.user.user_metadata.last_name,
-                    }
-                  : undefined;
-
-              profileData = await createProfile(session.user, userData);
-            }
-
-            if (mounted) {
-              setProfile(profileData);
-            }
-          }
-        } else {
-          setProfile(null);
-        }
-
-        setLoading(false);
-      } catch (error) {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     return () => {
-      mounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
       subscription.unsubscribe();
     };
   }, []);
@@ -377,10 +303,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearAuthStorage();
 
       setSigningOut(false);
-      
+
       // Force navigation to signin page
       setTimeout(() => {
-        window.location.href = '/signin';
+        window.location.href = "/signin";
       }, 100);
 
       return { error: null };
@@ -391,10 +317,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(null);
       clearAuthStorage();
       setSigningOut(false);
-      
+
       // Force navigation even on error
       setTimeout(() => {
-        window.location.href = '/signin';
+        window.location.href = "/signin";
       }, 100);
 
       return { error: null };
@@ -460,5 +386,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshProfile,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      <>
+        <div>
+          {session && (
+            <p className="text-white">Welcome back, {session.user?.email}</p>
+          )}
+        </div>
+        {children}
+      </>
+    </AuthContext.Provider>
+  );
 };
