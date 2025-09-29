@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Navbar, Footer } from "../sections";
 import { Button } from "../ui";
-import { supabase } from "../../lib/supabase";
 
 const CheckIcon = ({
   className = "w-16 h-16 text-green-400",
@@ -48,99 +47,20 @@ export const PurchaseSuccessPage: React.FC = () => {
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [packageName, setPackageName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [creditsAdded, setCreditsAdded] = useState(false);
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkPaddleWebhook = async () => {
-      const paddleCheckoutId = searchParams.get("checkout_id");
-      const paddleOrderId = searchParams.get("order_id");
+    // URL parametrelerini al (sadece gösterim için)
+    const creditsParam = searchParams.get("credits");
+    const packageParam = searchParams.get("package");
+    const userParam = searchParams.get("user");
+    const transactionParam = searchParams.get("transaction_id") || searchParams.get("order_id");
 
-      if (paddleCheckoutId && userId) {
-        if (!creditsAdded && !processing) {
-          setProcessing(true);
-          try {
-            const { data, error } = await supabase.rpc(
-              "process_paddle_purchase",
-              {
-                checkout_id: paddleCheckoutId,
-                user_uuid: userId,
-                credits_amount: parseInt(credits || '0'),
-                package_name: packageName || "unknown",
-                amount_paid: 0.0,
-                paddle_transaction_id: paddleOrderId,
-              }
-            );
-
-            if (!error && data && data.success) {
-              setCredits(data.credits.toString());
-              setPackageName(data.package_name);
-              setCreditsAdded(true);
-            } else {
-              setError(data?.error || error?.message || 'Purchase processing failed');
-            }
-          } catch (error) {
-            setError('Purchase verification failed');
-          } finally {
-            setProcessing(false);
-          }
-        }
-      }
-    };
-
-    checkPaddleWebhook();
-  }, [searchParams, userId, credits, packageName, creditsAdded, processing]);
-
-  // Add credits to user account
-  const addCredits = async () => {
-    if (!userId || !credits || creditsAdded || processing) return;
-
-    setProcessing(true);
-    setError(null);
-
-    try {
-      const creditsAmount = parseInt(credits);
-      if (isNaN(creditsAmount) || creditsAmount <= 0) {
-        setError("Invalid credits amount");
-        return;
-      }
-
-      // Since process_paddle_purchase already handles credit addition,
-      // this function is only needed for URL-based credit addition
-      const { error: rpcError } = await supabase.rpc(
-        "update_user_credits",
-        {
-          user_uuid: userId,
-          credit_amount: creditsAmount,
-          transaction_type: "purchase",
-          operation_type: "paddle_purchase",
-          description_text: `Paddle purchase: ${
-            packageName || "unknown"
-          } package (${creditsAmount} credits)`,
-        }
-      );
-
-      if (rpcError) {
-        setError(`Failed to add credits: ${rpcError.message}`);
-        return;
-      }
-
-      setCreditsAdded(true);
-
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Unknown error");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  // Add credits when data is ready
-  useEffect(() => {
-    if (userId && credits && !creditsAdded && !processing) {
-      addCredits();
-    }
-  }, [userId, credits, creditsAdded, processing]);
+    // State'leri güncelle (sadece gösterim için)
+    if (creditsParam) setCredits(creditsParam);
+    if (packageParam) setPackageName(packageParam);
+    if (userParam) setUserId(userParam);
+    if (transactionParam) setTransactionId(transactionParam);
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900">
@@ -190,11 +110,7 @@ export const PurchaseSuccessPage: React.FC = () => {
                   <div className="flex items-center justify-center gap-3">
                     <CreditIcon />
                     <h2 className="text-2xl font-bold text-white">
-                      {processing
-                        ? "Processing Credits..."
-                        : creditsAdded
-                        ? "Credits Added!"
-                        : "Adding Credits..."}
+                      Credits Purchased Successfully!
                     </h2>
                   </div>
 
@@ -203,31 +119,13 @@ export const PurchaseSuccessPage: React.FC = () => {
                       +{credits} AI Credits
                     </p>
                     <p className="text-sm text-gray-300 mt-1">
-                      {processing
-                        ? "Adding to your account..."
-                        : creditsAdded
-                        ? "Added to your account!"
-                        : "Preparing to add..."}
+                      Added to your account during purchase
                     </p>
 
-                    {processing && (
-                      <div className="mt-2 flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-green-400/20 border-t-green-400 rounded-full animate-spin"></div>
-                      </div>
-                    )}
-
-                    {creditsAdded && (
-                      <div className="mt-2 flex items-center justify-center text-green-400">
-                        <CheckIcon className="w-5 h-5" />
-                        <span className="ml-1 text-sm">Success!</span>
-                      </div>
-                    )}
-
-                    {error && (
-                      <div className="mt-2 p-3 bg-red-500/20 border border-red-400/30 rounded-lg">
-                        <p className="text-sm text-red-400">❌ {error}</p>
-                      </div>
-                    )}
+                    <div className="mt-2 flex items-center justify-center text-green-400">
+                      <CheckIcon className="w-5 h-5" />
+                      <span className="ml-1 text-sm">Purchase Completed!</span>
+                    </div>
                   </div>
 
                   {packageName && (

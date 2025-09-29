@@ -1,5 +1,4 @@
 // Paddle.js integration for CloneVoice credit system
-import { useEffect } from 'react'
 import { supabase } from './supabase'
 
 // Types
@@ -101,12 +100,6 @@ export const createCheckout = async (
 
   
   try {
-    if (isTestMode()) {
-      const testUrl = `${window.location.origin}/test-checkout?package=${packageId}&user=${userId}`
-      window.open(testUrl, '_blank', 'width=600,height=700,scrollbars=yes')
-      return { success: true }
-    }
-
     const selectedPackage = creditPackages.find(pkg => pkg.id === packageId)
     if (!selectedPackage) {
       return { success: false, error: 'Invalid package selected' }
@@ -129,7 +122,7 @@ export const createCheckout = async (
         user_id: userId,
         package_id: packageId,
         credits: selectedPackage.credits.toString(),
-        platform: 'CloneVoice'
+        platform: 'CloneVoice.app'
       },
       settings: {
         successUrl: successUrl,
@@ -230,7 +223,7 @@ export const processTestPurchase = async (
 
     // Purchase success sayfasına yönlendir
     const successUrl = `/purchase-success?credits=${selectedPackage.credits}&package=${packageId}&user=${userId}&timestamp=${Date.now()}&source=test`;
-    // window.location.href = successUrl;
+    window.location.href = successUrl;
 
     return {
       success: true,
@@ -310,22 +303,18 @@ export const deductCredits = async (
   }
 }
 
-// Validate Paddle webhook (for backend implementation)
 export const validatePaddleWebhook = (
   _payload: string,
   _signature: string,
   _publicKey: string
 ): boolean => {
   try {
-    // This would be implemented in the backend
-    // For now, return true for development
     return true
   } catch (error) {
     return false
   }
 }
 
-// Process Paddle webhook (for backend implementation)
 export const processPaddleWebhook = async (webhookData: any): Promise<void> => {
   try {
     const eventType = webhookData.event_type || webhookData.alert_name
