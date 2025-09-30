@@ -107,7 +107,9 @@ export const createCheckout = async (
 
     const paddle = await initializePaddle()
 
-    const successUrl = `${window.location.origin}/purchase-success?credits=${selectedPackage.credits}&package=${packageId}&user=${userId}&timestamp=${Date.now()}&source=paddle`
+    const timestamp = Date.now();
+    localStorage.setItem('purchase_timestamp', timestamp.toString());
+    const successUrl = `${window.location.origin}/purchase-success?credits=${selectedPackage.credits}&package=${packageId}&user=${userId}&timestamp=${timestamp}&source=paddle`
 
     const checkoutOptions = {
       items: [{
@@ -222,7 +224,9 @@ export const processTestPurchase = async (
     isProcessing = false;
 
     // Purchase success sayfasına yönlendir
-    const successUrl = `/purchase-success?credits=${selectedPackage.credits}&package=${packageId}&user=${userId}&timestamp=${Date.now()}&source=test`;
+    const timestamp = Date.now();
+    localStorage.setItem('purchase_timestamp', timestamp.toString());
+    const successUrl = `/purchase-success?credits=${selectedPackage.credits}&package=${packageId}&user=${userId}&timestamp=${timestamp}&source=test`;
     window.location.href = successUrl;
 
     return {

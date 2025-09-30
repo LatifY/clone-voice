@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Navbar, Footer } from "../sections";
 import { Button } from "../ui";
 
@@ -43,24 +43,34 @@ const SparkleIcon = () => (
 
 export const PurchaseSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [credits, setCredits] = useState<string | null>(null);
-  const [transactionId, setTransactionId] = useState<string | null>(null);
   const [packageName, setPackageName] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    // URL parametrelerini al (sadece gösterim için)
+    if (loaded) {
+      return;
+    }
+
+    const urlTimestamp = searchParams.get("timestamp");
+    const storedTimestamp = localStorage.getItem('purchase_timestamp');
+    console.log(urlTimestamp === storedTimestamp);
+    
+    if (!urlTimestamp || !storedTimestamp || urlTimestamp !== storedTimestamp) {
+      navigate('/404', { replace: true });
+      return;
+    }
+
+    setLoaded(true);
+    localStorage.removeItem('purchase_timestamp');
+
     const creditsParam = searchParams.get("credits");
     const packageParam = searchParams.get("package");
-    const userParam = searchParams.get("user");
-    const transactionParam = searchParams.get("transaction_id") || searchParams.get("order_id");
 
-    // State'leri güncelle (sadece gösterim için)
     if (creditsParam) setCredits(creditsParam);
-    if (packageParam) setPackageName(packageParam);
-    if (userParam) setUserId(userParam);
-    if (transactionParam) setTransactionId(transactionParam);
-  }, [searchParams]);
+    if (packageName) setPackageName(packageParam);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900">
@@ -110,7 +120,7 @@ export const PurchaseSuccessPage: React.FC = () => {
                   <div className="flex items-center justify-center gap-3">
                     <CreditIcon />
                     <h2 className="text-2xl font-bold text-white">
-                      Credits Purchased Successfully!
+                      Credits Added Successfully!
                     </h2>
                   </div>
 
@@ -119,13 +129,8 @@ export const PurchaseSuccessPage: React.FC = () => {
                       +{credits} AI Credits
                     </p>
                     <p className="text-sm text-gray-300 mt-1">
-                      Added to your account during purchase
+                      Ready to use for voice cloning
                     </p>
-
-                    <div className="mt-2 flex items-center justify-center text-green-400">
-                      <CheckIcon className="w-5 h-5" />
-                      <span className="ml-1 text-sm">Purchase Completed!</span>
-                    </div>
                   </div>
 
                   {packageName && (
@@ -136,130 +141,28 @@ export const PurchaseSuccessPage: React.FC = () => {
                       </span>
                     </p>
                   )}
-
-                  {userId && (
-                    <p className="text-xs text-gray-500">
-                      User: {userId.substring(0, 8)}...
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Transaction Info */}
-              {transactionId && (
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                  <p className="text-sm text-gray-400">
-                    <span className="font-medium">Transaction ID:</span>{" "}
-                    {transactionId}
-                  </p>
                 </div>
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+            <div className="flex justify-center relative z-10">
               <Link to="/dashboard">
-                <Button variant="primary" size="lg" className="min-w-[200px]">
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Start Voice Cloning
-                  </div>
-                </Button>
-              </Link>
-
-              <Link to="/pricing">
-                <Button variant="outline" size="lg" className="min-w-[200px]">
-                  <div className="flex items-center gap-2">
-                    <CreditIcon />
-                    Buy More Credits
-                  </div>
-                </Button>
-              </Link>
-
-              <Link to="/">
-                <Button variant="ghost" size="lg" className="min-w-[200px]">
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Back to Home
-                  </div>
+                <Button variant="primary" size="lg" className="px-8 py-3">
+                  Start Voice Cloning
                 </Button>
               </Link>
             </div>
 
-            {/* Additional Info */}
             <div className="border-t border-white/10 pt-6 relative z-10">
-              <div className="grid md:grid-cols-3 gap-4 text-sm text-gray-400">
-                <div className="flex items-center justify-center gap-2">
+              <div className="flex justify-center gap-8 text-sm text-gray-400">
+                <div className="flex items-center gap-2">
                   <CheckIcon className="w-4 h-4 text-green-400" />
                   <span>Credits added instantly</span>
                 </div>
-                <div className="flex items-center justify-center gap-2">
-                  <CheckIcon className="w-4 h-4 text-green-400" />
-                  <span>Receipt sent to email</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center gap-2">
                   <CheckIcon className="w-4 h-4 text-green-400" />
                   <span>Credits never expire</span>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Start Guide */}
-          <div className="mt-12 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-            <h3 className="text-xl font-bold text-white mb-6 text-center">
-              🚀 Quick Start Guide
-            </h3>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center space-y-3">
-                <div className="w-12 h-12 bg-blue-500/20 border border-blue-400/30 rounded-full flex items-center justify-center mx-auto">
-                  <span className="text-xl font-bold text-blue-400">1</span>
-                </div>
-                <h4 className="font-semibold text-white">Upload Audio</h4>
-                <p className="text-sm text-gray-400">
-                  Upload a clear audio sample of the voice you want to clone
-                </p>
-              </div>
-
-              <div className="text-center space-y-3">
-                <div className="w-12 h-12 bg-purple-500/20 border border-purple-400/30 rounded-full flex items-center justify-center mx-auto">
-                  <span className="text-xl font-bold text-purple-400">2</span>
-                </div>
-                <h4 className="font-semibold text-white">AI Processing</h4>
-                <p className="text-sm text-gray-400">
-                  Our AI will analyze and create a voice model (5 credits)
-                </p>
-              </div>
-
-              <div className="text-center space-y-3">
-                <div className="w-12 h-12 bg-green-500/20 border border-green-400/30 rounded-full flex items-center justify-center mx-auto">
-                  <span className="text-xl font-bold text-green-400">3</span>
-                </div>
-                <h4 className="font-semibold text-white">Generate Speech</h4>
-                <p className="text-sm text-gray-400">
-                  Type any text and generate speech in the cloned voice
-                </p>
               </div>
             </div>
           </div>

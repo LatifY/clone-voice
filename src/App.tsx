@@ -3,13 +3,11 @@ import {
   HomePage,
   PricingPage,
   PurchaseSuccessPage,
+  NotFoundPage,
 } from "./components/pages";
 import { SignIn, SignUp } from "./components/auth";
 import { GamepadCursor } from "./components/GamepadCursor";
 import { AuthProvider } from "./contexts";
-import { useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
-import { supabase } from "./lib/supabase";
 
 function App() {
 
@@ -25,6 +23,8 @@ function App() {
             <Route path="/purchase-success" element={<PurchaseSuccessPage />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/404" element={<NotFoundPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
           <GamepadCursor />
         </Router>
