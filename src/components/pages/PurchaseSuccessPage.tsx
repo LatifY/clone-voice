@@ -48,7 +48,7 @@ export const PurchaseSuccessPage: React.FC = () => {
   const [credits, setCredits] = useState<string | null>(null);
   const [packageName, setPackageName] = useState<string | null>(null);
   const loaded = useRef(false);
-  const { refreshProfile } = useAuth();
+  const { setPseudoCreditsProfile } = useAuth();
 
   useEffect(() => {
     if (loaded.current) return;
@@ -63,13 +63,17 @@ export const PurchaseSuccessPage: React.FC = () => {
 
     loaded.current = true;
     localStorage.removeItem("purchase_timestamp");
-    refreshProfile();
-
+    
     const creditsParam = searchParams.get("credits");
     const packageParam = searchParams.get("package");
 
     if (creditsParam) setCredits(creditsParam);
     if (packageParam) setPackageName(packageParam);
+    
+    if (creditsParam) {
+      console.log("Updating profile credits locally");
+      setPseudoCreditsProfile(parseInt(creditsParam, 10));
+    }
   }, [searchParams, navigate]);
 
   return (

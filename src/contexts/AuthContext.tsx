@@ -24,6 +24,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error?: AuthError | null }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error?: any }>;
   refreshProfile: () => Promise<void>;
+  setPseudoCreditsProfile: (credits: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -363,6 +364,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const setPseudoCreditsProfile = (credits: number) => {
+    setProfile((prevProfile) => {
+      if (!prevProfile) return null;
+      return {
+        ...prevProfile,
+        credits,
+      };
+    });
+  };
+
   const value: AuthContextType = {
     user,
     profile,
@@ -377,6 +388,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     resetPassword,
     updateProfile,
     refreshProfile,
+    setPseudoCreditsProfile
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
