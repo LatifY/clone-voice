@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Navbar, Footer } from "../sections";
 import { Button } from "../ui";
@@ -46,31 +46,28 @@ export const PurchaseSuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const [credits, setCredits] = useState<string | null>(null);
   const [packageName, setPackageName] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false)
+  const loaded = useRef(false);
 
   useEffect(() => {
-    if (loaded) {
-      return;
-    }
+    if (loaded.current) return;
 
     const urlTimestamp = searchParams.get("timestamp");
-    const storedTimestamp = localStorage.getItem('purchase_timestamp');
-    console.log(urlTimestamp === storedTimestamp);
-    
+    const storedTimestamp = localStorage.getItem("purchase_timestamp");
+
     if (!urlTimestamp || !storedTimestamp || urlTimestamp !== storedTimestamp) {
-      navigate('/404', { replace: true });
+      navigate("/404", { replace: true });
       return;
     }
 
-    setLoaded(true);
-    localStorage.removeItem('purchase_timestamp');
+    loaded.current = true;
+    localStorage.removeItem("purchase_timestamp");
 
     const creditsParam = searchParams.get("credits");
     const packageParam = searchParams.get("package");
 
     if (creditsParam) setCredits(creditsParam);
-    if (packageName) setPackageName(packageParam);
-  }, []);
+    if (packageParam) setPackageName(packageParam);
+  }, [searchParams, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900">

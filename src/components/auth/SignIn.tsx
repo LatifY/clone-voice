@@ -60,7 +60,6 @@ export const SignIn: React.FC = () => {
   const [loading, setLoading] = useState(createLoadingState())
   const [showPassword, setShowPassword] = useState(false)
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (user && !authLoading) {
       navigate('/')
@@ -87,7 +86,6 @@ export const SignIn: React.FC = () => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     
-    // Clear field-specific errors when user starts typing
     if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }))
     }
@@ -96,10 +94,8 @@ export const SignIn: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Clear previous errors
     setErrors({})
     
-    // Validate form
     const newErrors: FormErrors = {}
     
     const emailError = validateEmail(formData.email)
@@ -113,7 +109,6 @@ export const SignIn: React.FC = () => {
       return
     }
 
-    // Sign in with email/password
     setLoading(prev => ({ ...prev, signIn: true }))
     
     try {
@@ -122,7 +117,6 @@ export const SignIn: React.FC = () => {
       if (error) {
         setErrors({ general: getAuthErrorMessage(error) })
       } else {
-        // Success - navigation will be handled by useEffect
       }
     } catch (error) {
       setErrors({ general: 'An unexpected error occurred. Please try again.' })
@@ -163,7 +157,6 @@ export const SignIn: React.FC = () => {
     }
   }
 
-  // Show loading spinner while checking auth state
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900 flex items-center justify-center">
@@ -189,10 +182,10 @@ export const SignIn: React.FC = () => {
         {/* Header */}
         <div className="text-center">
           <Link to="/" className="inline-block mb-4 text-gray-400 hover:text-white transition-colors">
-            ← Ana Sayfaya Dön
+            ← Back to Homepage
           </Link>
-          <h2 className="text-4xl font-bold text-white mb-2 font-heading">Hoş Geldiniz</h2>
-          <p className="text-gray-300 font-body">Hesabınıza giriş yapın</p>
+          <h2 className="text-4xl font-bold text-white mb-2 font-heading">Welcome</h2>
+          <p className="text-gray-300 font-body">Sign in to your account</p>
         </div>
 
         <Card variant="glass">
@@ -211,7 +204,7 @@ export const SignIn: React.FC = () => {
                 ) : (
                   <GoogleIcon />
                 )}
-                Google ile Giriş Yap
+                Sign in with Google
               </Button>
               
               <Button
@@ -226,7 +219,7 @@ export const SignIn: React.FC = () => {
                 ) : (
                   <GitHubIcon />
                 )}
-                GitHub ile Giriş Yap
+                Sign in with GitHub
               </Button>
             </div>
 
@@ -348,10 +341,10 @@ export const SignIn: React.FC = () => {
                 {loading.signIn ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
-                    Giriş Yapılıyor...
+                    Signing in...
                   </div>
                 ) : (
-                  'Giriş Yap'
+                  'Sign In'
                 )}
               </Button>
             </form>

@@ -143,7 +143,6 @@ export const SignUp: React.FC = () => {
     setIsSubmitting(true)
     setErrors({})
 
-    // Validate form
     const newErrors: FormErrors = {}
     
     const firstNameError = validateName(formData.firstName, 'First name')
@@ -188,7 +187,6 @@ export const SignUp: React.FC = () => {
           setErrors({ general: error.message || 'An error occurred during registration. Please try again.' })
         }
       } else {
-        // Successful registration - redirect to home page
         navigate('/')
       }
     } catch (error) {
@@ -211,7 +209,6 @@ export const SignUp: React.FC = () => {
       if (error) {
         setErrors({ general: `An error occurred while signing in with ${provider === 'google' ? 'Google' : 'GitHub'}.` })
       }
-      // Başarılı olursa AuthContext navigate'i handle eder
     } catch (error) {
       setErrors({ general: 'An unexpected error occurred during OAuth sign in.' })
     }
@@ -278,7 +275,7 @@ export const SignUp: React.FC = () => {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
