@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Navbar, Footer } from "../sections";
 import { Button } from "../ui";
+import { useAuth } from "../../contexts";
 
 const CheckIcon = ({
   className = "w-16 h-16 text-green-400",
@@ -47,6 +48,7 @@ export const PurchaseSuccessPage: React.FC = () => {
   const [credits, setCredits] = useState<string | null>(null);
   const [packageName, setPackageName] = useState<string | null>(null);
   const loaded = useRef(false);
+  const { refreshProfile } = useAuth();
 
   useEffect(() => {
     if (loaded.current) return;
@@ -61,6 +63,7 @@ export const PurchaseSuccessPage: React.FC = () => {
 
     loaded.current = true;
     localStorage.removeItem("purchase_timestamp");
+    refreshProfile();
 
     const creditsParam = searchParams.get("credits");
     const packageParam = searchParams.get("package");
