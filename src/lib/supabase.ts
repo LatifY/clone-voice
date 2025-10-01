@@ -79,3 +79,23 @@ export interface CreditPackage {
   is_active: boolean
   created_at: string
 }
+
+export interface PurchaseMetadata {
+  timestamp: string
+  event_type: string
+  package_id: string
+  payment_method: string
+  paddle_transaction_id?: string
+  [key: string]: any
+}
+
+export interface Purchase {
+  id: string
+  user_id: string
+  transaction_type: string
+  amount: number
+  previous_balance: number
+  new_balance: number
+  metadata: PurchaseMetadata
+  created_at: string
+}

@@ -57,7 +57,7 @@ export const Footer: React.FC = () => {
             <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">
               Pricing
             </a>
-            <a href="mailto:hello@clonevoice.app" className="text-gray-400 hover:text-white transition-colors">
+            <a href="#contact" className="text-gray-400 hover:text-white transition-colors">
               Contact
             </a>
             <a href="/privacy" className="text-gray-400 hover:text-white transition-colors">

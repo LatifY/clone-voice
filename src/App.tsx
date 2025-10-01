@@ -5,6 +5,7 @@ import {
   PurchaseSuccessPage,
   NotFoundPage,
   ProfilePage,
+  PurchaseHistoryPage,
 } from "./components/pages";
 import { SignIn, SignUp } from "./components/auth";
 import { GamepadCursor } from "./components/GamepadCursor";
@@ -23,6 +24,7 @@ function App() {
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/purchase-success" element={<PurchaseSuccessPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/404" element={<NotFoundPage />} />

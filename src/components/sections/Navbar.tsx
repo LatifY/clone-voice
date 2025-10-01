@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "../ui";
 import { useAuth } from "../../contexts";
 import logo from "../../assets/img/logo.png";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
 
 // SVG Icons
 const MenuIcon = () => (
@@ -133,27 +134,7 @@ const LogoutIcon = () => (
   </svg>
 );
 
-const LoadingSpinner = () => (
-  <svg
-    className="w-4 h-4 animate-spin"
-    fill="none"
-    viewBox="0 0 24 24"
-  >
-    <circle
-      className="opacity-25"
-      cx="12"
-      cy="12"
-      r="10"
-      stroke="currentColor"
-      strokeWidth="4"
-    />
-    <path
-      className="opacity-75"
-      fill="currentColor"
-      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-    />
-  </svg>
-);
+
 
 export const Navbar: React.FC = () => {
   const { user, profile, signOut } = useAuth();
@@ -285,10 +266,7 @@ export const Navbar: React.FC = () => {
                     </div>
                     <span className="text-sm font-medium text-white hidden lg:block">
                       {profile?.display_name ||
-                        user?.user_metadata?.full_name ||
-                        user?.user_metadata?.first_name ||
-                        user?.email?.split("@")[0] ||
-                        "User"}
+                        <LoadingSpinner></LoadingSpinner>}
                     </span>
                     <ChevronDownIcon />
                   </button>
@@ -326,7 +304,16 @@ export const Navbar: React.FC = () => {
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <UserIcon />
-                        Edit Profile
+                        Profile
+                      </Link>
+
+                      <Link
+                        to="/purchase-history"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <ShoppingCartIcon />
+                        Purchase History
                       </Link>
 
                       <Link
@@ -480,7 +467,22 @@ export const Navbar: React.FC = () => {
                         className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-gray-800"
                       >
                         <UserIcon />
-                        Edit Profile
+                        Profile
+                      </Button>
+                    </Link>
+
+                    <Link
+                      to="/purchase-history"
+                      className="block"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-gray-800"
+                      >
+                        <ShoppingCartIcon />
+                        Purchase History
                       </Button>
                     </Link>
 
