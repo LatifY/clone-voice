@@ -187,7 +187,7 @@ export const SignUp: React.FC = () => {
           setErrors({ general: error.message || 'An error occurred during registration. Please try again.' })
         }
       } else {
-        navigate('/')
+        navigate('/email-confirmation')
       }
     } catch (error) {
       console.error('Unexpected error:', error)

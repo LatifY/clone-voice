@@ -1,6 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Button } from "../ui"
 
+// Custom CSS animations for floating AI text
+const floatingStyles = `
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(0px); 
+      opacity: 1;
+    }
+    25% { 
+      transform: translateY(-6px); 
+      opacity: 0.8;
+    }
+    50% { 
+      transform: translateY(-12px); 
+      opacity: 0.9;
+    }
+    75% { 
+      transform: translateY(-6px); 
+      opacity: 0.8;
+    }
+  }
+`;
+
 // SVG Icons
 const PlayIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -229,7 +251,9 @@ export const Hero: React.FC = () => {
   };
 
   return (
-    <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-black to-gray-800 min-h-screen flex items-center relative overflow-hidden border-b-4 border-gray-900">
+    <>
+      <style dangerouslySetInnerHTML={{ __html: floatingStyles }} />
+      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-black to-gray-800 min-h-screen flex items-center relative overflow-hidden border-b-4 border-gray-900">
       {/* Grain overlay */}
       <div className="absolute inset-0 opacity-15 mix-blend-overlay pointer-events-none" 
            style={{
@@ -253,11 +277,18 @@ export const Hero: React.FC = () => {
           {/* Main Heading */}
           <div className="space-y-6">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight font-heading tracking-tight">
-              <span className="text-white block bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              <span className="text-white block bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent tracking-wider">
                 CLONE ANY VOICE
               </span>
-              <span className="text-white block bg-gradient-to-r from-gray-300 to-white bg-clip-text text-transparent">
-                WITH AI MAGIC
+              <span className="text-white block bg-gradient-to-r from-gray-300 to-white bg-clip-text text-transparent tracking-wider">
+                WITH <span className="relative inline-block">
+                  <span className="relative z-10 bg-gradient-to-r from-purple-600 via-violet-500 to-indigo-600 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(139,69,247,0.5)]" style={{
+                    animation: 'float 4s ease-in-out infinite'
+                  }}>
+                    AI
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-violet-500/30 to-indigo-500/30 blur-md opacity-60"></span>
+                </span> MAGIC
               </span>
             </h1>
             <p className="text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto font-body">
@@ -417,5 +448,6 @@ export const Hero: React.FC = () => {
       {/* Bottom gradient transition to Features */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-black/50 pointer-events-none"></div>
     </section>
+    </>
   );
 };

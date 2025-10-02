@@ -160,6 +160,7 @@ export const Navbar: React.FC = () => {
   const navItems = [
     { label: "Features", href: "#features" },
     { label: "Pricing", href: "/pricing", isRoute: true },
+    { label: "Voice Clone", href: "/voice-clone", isRoute: true },
     { label: "Examples", href: "#examples" },
     { label: "Contact", href: "#contact" },
   ];
