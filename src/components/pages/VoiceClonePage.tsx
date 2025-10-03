@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Navbar, Footer } from '../sections';
 import { Card } from '../ui';
+import { useAudioRecording } from '../../hooks/useAudioRecording';
 
 // Icons
 const MicrophoneIcon = ({ className = "w-6 h-6" }) => (
@@ -284,11 +285,18 @@ export const VoiceClonePage: React.FC = () => {
   const [voiceSource, setVoiceSource] = useState<VoiceSource>('record');
   const [text, setText] = useState('');
   
-  // Recording state
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [hasRecording, setHasRecording] = useState(false);
-  const [waveformData, setWaveformData] = useState<number[]>(Array(60).fill(0));
+  // Use audio recording hook
+  const {
+    isRecording,
+    hasRecording,
+    recordingTime,
+    waveformData,
+    recordedAudioUrl,
+    recordingError,
+    startRecording,
+    stopRecording,
+    deleteRecording,
+  } = useAudioRecording();
   
   // Upload state
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -298,45 +306,12 @@ export const VoiceClonePage: React.FC = () => {
   // Preset state
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
-  // Recording animation
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isRecording) {
-      interval = setInterval(() => {
-        setRecordingTime(prev => prev + 0.1);
-        // Realistic waveform simulation
-        setWaveformData(prev => {
-          const newData = [...prev];
-          for (let i = 0; i < newData.length; i++) {
-            // Create more realistic audio wave patterns
-            const baseHeight = 30 + Math.sin(Date.now() * 0.01 + i * 0.5) * 15;
-            const randomVariation = Math.random() * 40;
-            newData[i] = Math.max(5, baseHeight + randomVariation);
-          }
-          return newData;
-        });
-      }, 50);
-    }
-    return () => clearInterval(interval);
-  }, [isRecording]);
-
   const handleRecord = () => {
     if (isRecording) {
-      setIsRecording(false);
-      setHasRecording(true);
-      // Set final static waveform
-      setWaveformData(Array(60).fill(0).map(() => Math.random() * 80 + 10));
+      stopRecording();
     } else {
-      setIsRecording(true);
-      setRecordingTime(0);
-      setHasRecording(false);
+      startRecording();
     }
-  };
-
-  const handleDeleteRecording = () => {
-    setHasRecording(false);
-    setRecordingTime(0);
-    setWaveformData(Array(60).fill(0));
   };
 
   // File upload handlers
@@ -563,7 +538,7 @@ export const VoiceClonePage: React.FC = () => {
 
                         {hasRecording && (
                           <button
-                            onClick={handleDeleteRecording}
+                            onClick={deleteRecording}
                             className="px-4 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-400/30 rounded-xl text-red-400 font-medium transition-all duration-300 hover:scale-105 focus:outline-none"
                           >
                             <TrashIcon />
@@ -572,10 +547,34 @@ export const VoiceClonePage: React.FC = () => {
                       </div>
 
                       {/* Audio Playback */}
-                      {hasRecording && (
+                      {hasRecording && recordedAudioUrl && (
                         <div className="p-4 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border border-white/10 rounded-xl">
                           <p className="text-sm text-gray-400 mb-3">Playback Recording</p>
-                          <AudioPlayer audioUrl="/src/assets/audio/ai-morgan-freeman.wav" />
+                          <AudioPlayer audioUrl={recordedAudioUrl} />
+                        </div>
+                      )}
+
+                      {/* Error Message */}
+                      {recordingError && (
+                        <div className="p-4 bg-red-500/10 backdrop-blur-sm border border-red-400/30 rounded-xl">
+                          <p className="text-sm text-red-300 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {recordingError}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Microphone Permission Info */}
+                      {!hasRecording && !isRecording && !recordingError && (
+                        <div className="p-4 bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 rounded-xl">
+                          <p className="text-sm text-blue-300 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Make sure to allow microphone access when prompted for recording.
+                          </p>
                         </div>
                       )}
                     </div>

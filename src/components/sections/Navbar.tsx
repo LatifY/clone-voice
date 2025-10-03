@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../ui";
 import { useAuth } from "../../contexts";
 import logo from "../../assets/img/logo.png";
@@ -40,7 +40,7 @@ const CloseIcon = () => (
 
 const UserIcon = () => (
   <svg
-    className="w-5 h-5"
+    className="w-4 h-4"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -141,6 +141,8 @@ export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -157,12 +159,28 @@ export const Navbar: React.FC = () => {
     };
   }, []);
 
+  // Handle homepage section scrolling when URL has hash
+  useEffect(() => {
+    if (location.pathname === "/" && location.hash) {
+      const timer = setTimeout(() => {
+        const element = document.querySelector(location.hash);
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
+
   const navItems = [
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "/pricing", isRoute: true },
-    { label: "Voice Clone", href: "/voice-clone", isRoute: true },
-    { label: "Examples", href: "#examples" },
-    { label: "Contact", href: "#contact" },
+    { label: "Features", href: "#features", sectionId: "features", type: "section" },
+    { label: "Examples", href: "#examples", sectionId: "examples", type: "section" },
+    { label: "Contact", href: "#contact", sectionId: "contact", type: "section" },
+    { label: "Pricing", href: "/pricing", type: "page" },
+    { label: "Voice Clone", href: "/voice-clone", type: "page" },
   ];
 
   const handleSignOut = async () => {
@@ -174,19 +192,33 @@ export const Navbar: React.FC = () => {
     }
   };
 
-  const handleSmoothScroll = (
+  const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    href: string
+    item: typeof navItems[0]
   ) => {
-    e.preventDefault();
-    const target = document.querySelector(href);
-    if (target) {
-      target.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    if (item.type === "section") {
+      e.preventDefault();
+      
+      // If we're not on homepage, navigate to homepage with hash
+      if (location.pathname !== "/") {
+        navigate("/" + item.href);
+      } else {
+        // We're on homepage, just scroll to section
+        const target = document.querySelector(item.href);
+        if (target) {
+          target.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }
+      setIsOpen(false);
     }
-    setIsOpen(false);
+    // For page navigation, let Link handle it normally
+  };
+
+  const isActivePage = (href: string) => {
+    return location.pathname === href;
   };
 
   return (
@@ -211,22 +243,35 @@ export const Navbar: React.FC = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => 
-              item.isRoute ? (
+              item.type === "page" ? (
                 <Link
                   key={item.label}
                   to={item.href}
-                  className="text-gray-300 hover:text-white transition-colors font-medium"
+                  className={`relative transition-all duration-300 font-medium py-2 ${
+                    isActivePage(item.href)
+                      ? 'text-white'
+                      : 'text-gray-300 hover:text-white'
+                  }`}
                 >
                   {item.label}
+                  {/* Active indicator with animation */}
+                  <span className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-500 transition-all duration-300 ${
+                    isActivePage(item.href) ? 'w-full opacity-100' : 'w-0 opacity-0'
+                  }`}></span>
+                  {/* Hover indicator */}
+                  <span className={`absolute bottom-0 left-0 h-0.5 bg-white/30 transition-all duration-300 ${
+                    isActivePage(item.href) ? 'w-0 opacity-0' : 'w-0 group-hover:w-full opacity-0 hover:opacity-100'
+                  }`}></span>
                 </Link>
               ) : (
                 <a
                   key={item.label}
                   href={item.href}
-                  onClick={(e) => handleSmoothScroll(e, item.href)}
-                  className="text-gray-300 hover:text-white transition-colors font-medium cursor-pointer"
+                  onClick={(e) => handleNavClick(e, item)}
+                  className="text-gray-300 hover:text-white transition-colors duration-300 font-medium cursor-pointer py-2 relative group"
                 >
                   {item.label}
+                  <span className="absolute bottom-0 left-0 h-0.5 bg-white/30 w-0 group-hover:w-full transition-all duration-300"></span>
                 </a>
               )
             )}
@@ -377,21 +422,28 @@ export const Navbar: React.FC = () => {
         {isOpen && (
           <div className="md:hidden border-t border-gray-800 py-4 space-y-4">
             {navItems.map((item) => 
-              item.isRoute ? (
+              item.type === "page" ? (
                 <Link
                   key={item.label}
                   to={item.href}
-                  className="block px-4 py-2 text-gray-300 hover:text-white transition-colors font-medium"
+                  className={`block px-4 py-3 transition-all duration-300 font-medium relative ${
+                    isActivePage(item.href)
+                      ? 'text-white bg-gradient-to-r from-purple-600/20 to-pink-600/10 border-l-4 border-purple-400 shadow-lg'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {item.label}
+                  {isActivePage(item.href) && (
+                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
+                  )}
                 </Link>
               ) : (
                 <a
                   key={item.label}
                   href={item.href}
-                  onClick={(e) => handleSmoothScroll(e, item.href)}
-                  className="block px-4 py-2 text-gray-300 hover:text-white transition-colors font-medium cursor-pointer"
+                  onClick={(e) => handleNavClick(e, item)}
+                  className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300 font-medium cursor-pointer"
                 >
                   {item.label}
                 </a>
